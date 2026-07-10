@@ -64,7 +64,7 @@ const Projects: React.FC<ProjectsProps> = ({
   team
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 15;
 
   const { status: filterStatus, priority: filterPriority, search: searchQuery, tag: filterTag, showCompleted, memberId: filterMemberId } = filters;
 
@@ -78,7 +78,7 @@ const Projects: React.FC<ProjectsProps> = ({
   // Reset page when filter or search changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterPriority, searchQuery]);
+  }, [filterStatus, filterPriority, searchQuery, filterTag, filterMemberId, showCompleted]);
 
   const filteredProjects = projects.filter(p => {
     const statusMatch = filterStatus === 'All' 
@@ -92,6 +92,14 @@ const Projects: React.FC<ProjectsProps> = ({
     return statusMatch && searchMatch && priorityMatch && tagMatch && memberMatch;
   });
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
+  // Adjust page if it exceeds total pages (e.g. after changing items per page or filtering)
+  React.useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -139,13 +147,6 @@ const Projects: React.FC<ProjectsProps> = ({
               <ListIcon size={18} />
             </button>
           </div>
-          <button 
-            onClick={() => setActiveTab('new-project')}
-            className="bg-brand-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-700 transition-all flex items-center gap-2 shadow-lg shadow-brand-200"
-          >
-            <Plus size={18} />
-            Create Project
-          </button>
         </div>
       </div>
 
@@ -334,21 +335,32 @@ const Projects: React.FC<ProjectsProps> = ({
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="pl-4 py-4 w-8"></th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Team</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Deadline</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider"></th>
+                  <th className="pl-4 py-3 w-8"></th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => setActiveTab('new-project')}
+                        className="hover:bg-slate-100 hover:text-brand-600 p-0.5 rounded transition-all inline-flex items-center justify-center"
+                        title="Add New Project"
+                      >
+                        <Plus size={16} strokeWidth={3.5} />
+                      </button>
+                      <span>Project</span>
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Priority</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Team</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Deadline</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedProjects.map((project) => (
                   <tr key={project.id} className="hover:bg-slate-50/50 transition-all cursor-pointer group" onClick={() => onProjectClick?.(project.id)}>
-                    <td className="pl-4 py-4 w-8"></td>
-                    <td className="px-6 py-4">
+                    <td className="pl-4 py-2 w-8"></td>
+                    <td className="px-6 py-2">
                       <p className="text-sm font-semibold text-slate-800 group-hover:text-brand-600 transition-colors">{project.name}</p>
                       <div className="flex items-center gap-2">
                       <Tooltip text={project.description}>
@@ -366,17 +378,17 @@ const Projects: React.FC<ProjectsProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <span className={`inline-flex items-center text-xs font-medium ${getStatusColor(project.status)}`}>
                         {project.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <span className={`text-xs font-semibold ${getPriorityColor(project.priority)}`}>
                         {project.priority}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="flex -space-x-2">
                         {project.team.slice(0, 3).map((member) => (
                           <div key={member.id} className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold shadow-sm ${getAvatarColor(member.name)}`}>
@@ -385,10 +397,10 @@ const Projects: React.FC<ProjectsProps> = ({
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                    <td className="px-6 py-2 text-sm text-slate-500 whitespace-nowrap">
                       {formatDate(project.deadline)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-[80px] bg-slate-100 rounded-full h-1.5">
                           <div 
@@ -401,7 +413,7 @@ const Projects: React.FC<ProjectsProps> = ({
                         <span className="text-xs font-medium text-slate-600">{project.progress}%</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={(e) => { e.stopPropagation(); onEdit(project); }}

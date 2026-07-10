@@ -226,13 +226,6 @@ const Tasks: React.FC<TasksProps> = ({
           <h2 className="text-2xl font-bold text-slate-800">Tasks</h2>
           <p className="text-slate-500">Track and manage individual tasks across all projects.</p>
         </div>
-        <button 
-          onClick={() => setActiveTab('new-task')}
-          className="bg-brand-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-700 transition-all flex items-center gap-2 shadow-lg shadow-brand-200"
-        >
-          <Plus size={18} />
-          Add New Task
-        </button>
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center gap-4">
@@ -310,7 +303,18 @@ const Tasks: React.FC<TasksProps> = ({
             <thead>
               <tr className="bg-slate-50/50">
                 <th className="pl-4 py-4 w-8"></th>
-                <th className="px-3 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Task Name</th>
+                <th className="px-3 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => setActiveTab('new-task')}
+                      className="hover:bg-slate-100 hover:text-brand-600 p-0.5 rounded transition-all inline-flex items-center justify-center"
+                      title="Add New Task"
+                    >
+                      <Plus size={16} strokeWidth={3.5} />
+                    </button>
+                    <span>Task</span>
+                  </div>
+                </th>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project</th>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Priority</th>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>

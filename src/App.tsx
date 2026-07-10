@@ -116,7 +116,7 @@ const App: React.FC = () => {
 
       return {
         ...project,
-        status: autoStatus,
+        status: (total > 0 && completed === total) ? 'Completed' : (project.status || autoStatus),
         tasksCount: total,
         completedTasksCount: completed,
         progress
@@ -1022,6 +1022,20 @@ const App: React.FC = () => {
                     <option>High</option>
                   </select>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Status</label>
+                  <select 
+                    value={editingProject.status}
+                    onChange={(e) => setEditingProject({...editingProject, status: e.target.value as any})}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="At Risk">At Risk</option>
+                    <option value="On Hold">On Hold</option>
+                  </select>
+                </div>
               </div>
               <div className="space-y-2">
                  <label className="text-sm font-bold text-slate-700">Tags (comma separated)</label>
@@ -1167,7 +1181,7 @@ const App: React.FC = () => {
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Add New Task</h2>
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Task Name</label>
+                <label className="text-sm font-bold text-slate-700">+ Task Name</label>
                 <input 
                   type="text" 
                   value={newTask.name}
