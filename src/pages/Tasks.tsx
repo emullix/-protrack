@@ -46,7 +46,8 @@ const TaskRow: React.FC<{
   getPriorityColor: (priority: Priority) => string;
   value: string;
   isDraggable: boolean;
-}> = ({ task, onToggleStatus, onEdit, onDelete, onShowMeetings, meetings, getStatusIcon, getPriorityColor, value, isDraggable }) => {
+  onProjectClick?: (projectId: string, projectName: string) => void;
+}> = ({ task, onToggleStatus, onEdit, onDelete, onShowMeetings, meetings, getStatusIcon, getPriorityColor, value, isDraggable, onProjectClick }) => {
   const dragControls = useDragControls();
 
   return (
@@ -94,7 +95,10 @@ const TaskRow: React.FC<{
         </div>
       </td>
       <td className="px-6 py-4">
-        <span className="text-xs font-medium text-brand-600">
+        <span 
+          onClick={() => onProjectClick?.(task.projectId, task.projectName)}
+          className="text-xs font-medium text-brand-600 hover:underline cursor-pointer"
+        >
           {task.projectName}
         </span>
       </td>
@@ -126,9 +130,8 @@ const TaskRow: React.FC<{
       <td className="px-6 py-4">
         <button 
           onClick={() => onShowMeetings(task.id)}
-          className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
+          className="text-xs font-medium text-brand-600 hover:underline"
         >
-          <MapPin size={14} />
           {meetings.filter(m => m.taskId === task.id).length}
         </button>
       </td>
@@ -167,7 +170,7 @@ const Tasks: React.FC<TasksProps> = ({
   projects,
   onReorder
 }) => {
-  const [filterStatus, setFilterStatus] = useState<TaskStatus | 'All'>('All');
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | 'All'>('To Do');
   const [filterProject, setFilterProject] = useState<string>(initialProjectFilter || 'All');
   const [filterPriority, setFilterPriority] = useState<Priority | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -187,11 +190,23 @@ const Tasks: React.FC<TasksProps> = ({
   }, [filterStatus, filterProject, filterPriority, searchQuery]);
 
   const filteredTasks = tasks.filter(task => {
+    const project = projects.find(p => p.id?.toString() === task.projectId?.toString());
+    if (project?.status === 'On Hold') return false;
+
     const statusMatch = filterStatus === 'All' || task.status === filterStatus;
     const projectMatch = filterProject === 'All' || task.projectId === filterProject;
     const priorityMatch = filterPriority === 'All' || task.priority === filterPriority;
     const searchMatch = task.name.toLowerCase().includes(searchQuery.toLowerCase());
     return statusMatch && projectMatch && priorityMatch && searchMatch;
+  }).sort((a, b) => {
+    const nameA = a.projectName || '';
+    const nameB = b.projectName || '';
+    const projectCompare = nameA.localeCompare(nameB);
+    if (projectCompare !== 0) return projectCompare;
+
+    const dateA = a.dueDate || '';
+    const dateB = b.dueDate || '';
+    return dateA.localeCompare(dateB);
   });
 
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -344,6 +359,7 @@ const Tasks: React.FC<TasksProps> = ({
                   getStatusIcon={getStatusIcon}
                   getPriorityColor={getPriorityColor}
                   isDraggable={filterProject !== 'All'}
+                  onProjectClick={(projectId) => setFilterProject(projectId)}
                 />
               ))}
             </Reorder.Group>
