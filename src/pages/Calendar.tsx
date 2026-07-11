@@ -292,6 +292,11 @@ const Calendar: React.FC<CalendarProps> = ({ projects, tasks, team, filters, set
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{event.type}</span>
                     </div>
                     <h4 className="text-sm font-bold text-slate-800 mb-1 group-hover:text-brand-600 transition-colors">{event.name}</h4>
+                    {event.type === 'task' && (
+                      <p className="text-[11px] text-slate-400 mb-2">
+                        Project: <span className="text-slate-600 font-semibold">{projects.find(p => p.id?.toString() === event.projectId?.toString())?.name || event.projectName || 'Unknown'}</span>
+                      </p>
+                    )}
                     <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
                       <div className="flex items-center gap-1">
                         <Clock size={12} />

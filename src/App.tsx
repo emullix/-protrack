@@ -931,6 +931,15 @@ const App: React.FC = () => {
                     <option>High</option>
                   </select>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Deadline</label>
+                  <input 
+                    type="date" 
+                    value={newProject.deadline}
+                    onChange={(e) => setNewProject({...newProject, deadline: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium" 
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                  <label className="text-sm font-bold text-slate-700">Tags (comma separated)</label>
@@ -1037,16 +1046,27 @@ const App: React.FC = () => {
                   </select>
                 </div>
               </div>
-              <div className="space-y-2">
-                 <label className="text-sm font-bold text-slate-700">Tags (comma separated)</label>
-                <input 
-                  type="text" 
-                  value={editTagsInput}
-                  onChange={(e) => setEditTagsInput(e.target.value)}
-                  placeholder="e.g. Marketing, Phase 1" 
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
-                />
-               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Deadline</label>
+                  <input 
+                    type="date" 
+                    value={editingProject.deadline}
+                    onChange={(e) => setEditingProject({...editingProject, deadline: e.target.value})}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
+                  />
+                </div>
+                <div className="space-y-2">
+                   <label className="text-sm font-bold text-slate-700">Tags (comma separated)</label>
+                  <input 
+                    type="text" 
+                    value={editTagsInput}
+                    onChange={(e) => setEditTagsInput(e.target.value)}
+                    placeholder="e.g. Marketing, Phase 1" 
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
+                  />
+                 </div>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Team Members</label>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-3 border border-slate-200 rounded-lg">
