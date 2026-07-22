@@ -241,9 +241,12 @@ const Projects: React.FC<ProjectsProps> = ({
           {filterStatus === 'All' && (
             <div className="flex items-center gap-3">
               {onHoldCount > 0 && (
-                <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                <button 
+                  onClick={() => setFilterStatus('On Hold')}
+                  className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 px-2.5 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer"
+                >
                   {onHoldCount} {onHoldCount === 1 ? 'project' : 'projects'} on hold
-                </span>
+                </button>
               )}
               <label className="relative inline-flex items-center cursor-pointer">
                 <input 
