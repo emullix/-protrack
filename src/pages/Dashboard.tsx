@@ -36,18 +36,9 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, team, 
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
-          <p className="text-slate-500">Welcome back, Alex. Here's what's happening today.</p>
-        </div>
-        <button 
-          onClick={() => setActiveTab('reports')}
-          className="bg-brand-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-700 transition-all flex items-center gap-2 shadow-lg shadow-brand-200"
-        >
-          <TrendingUp size={18} />
-          View Reports
-        </button>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
+        <p className="text-slate-500">Welcome back, Alex. Here's what's happening today.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

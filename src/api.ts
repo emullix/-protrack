@@ -41,6 +41,17 @@ const api = {
         body: JSON.stringify(credentials)
       });
       return handleResponse(resp);
+    },
+    changePassword: async (data: any) => {
+      const resp = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify(data)
+      });
+      return handleResponse(resp);
     }
   },
   projects: {

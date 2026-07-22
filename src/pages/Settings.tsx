@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { User as UserType, Role } from '../types';
+import api from '../api';
 
 interface SettingsProps {
   currentUser: UserType | null;
@@ -34,6 +35,47 @@ const Settings: React.FC<SettingsProps> = ({
   onDeleteRole 
 }) => {
   const [activeSection, setActiveSection] = React.useState<string | null>(null);
+
+  // Change Password state
+  const [currentPassword, setCurrentPassword] = React.useState('');
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [passError, setPassError] = React.useState('');
+  const [passSuccess, setPassSuccess] = React.useState('');
+  const [passLoading, setPassLoading] = React.useState(false);
+
+  const handlePasswordChange = async () => {
+    setPassError('');
+    setPassSuccess('');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPassError('All fields are required');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPassError('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPassError('Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setPassLoading(true);
+      await api.auth.changePassword({ currentPassword, newPassword });
+      setPassSuccess('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setPassError(err.message || 'Failed to update password');
+    } finally {
+      setPassLoading(false);
+    }
+  };
 
   const sections = [
     { id: 'profile', label: 'Profile Information', icon: User, description: 'Update your personal details and public profile.' },
@@ -99,10 +141,22 @@ const Settings: React.FC<SettingsProps> = ({
               Change Password
             </h3>
             <div className="space-y-4">
+              {passError && (
+                <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-lg">
+                  {passError}
+                </div>
+              )}
+              {passSuccess && (
+                <div className="p-3 bg-emerald-50 text-emerald-600 text-sm font-medium rounded-lg">
+                  {passSuccess}
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Current Password</label>
                 <input 
                   type="password" 
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                   placeholder="••••••••"
                 />
@@ -112,6 +166,8 @@ const Settings: React.FC<SettingsProps> = ({
                   <label className="text-sm font-bold text-slate-700">New Password</label>
                   <input 
                     type="password" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                     placeholder="••••••••"
                   />
@@ -120,13 +176,19 @@ const Settings: React.FC<SettingsProps> = ({
                   <label className="text-sm font-bold text-slate-700">Confirm New Password</label>
                   <input 
                     type="password" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                     placeholder="••••••••"
                   />
                 </div>
               </div>
-              <button className="bg-brand-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-200">
-                Update Password
+              <button 
+                onClick={handlePasswordChange}
+                disabled={passLoading}
+                className="bg-brand-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-200 disabled:opacity-50"
+              >
+                {passLoading ? 'Updating...' : 'Update Password'}
               </button>
             </div>
           </div>
