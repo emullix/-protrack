@@ -36,6 +36,48 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<User[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS);
+
+  // Listen to hashchange events (browser back/forward buttons)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const validTabs = [
+        'dashboard', 'projects', 'tasks', 'calendar', 'meetings', 
+        'reports', 'team', 'settings', 'new-project', 'new-task', 
+        'new-member', 'edit-project', 'edit-task', 'edit-member'
+      ];
+      if (hash && validTabs.includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Initial check on load/login
+    const initialHash = window.location.hash.replace('#', '');
+    const validTabs = [
+      'dashboard', 'projects', 'tasks', 'calendar', 'meetings', 
+      'reports', 'team', 'settings', 'new-project', 'new-task', 
+      'new-member', 'edit-project', 'edit-task', 'edit-member'
+    ];
+    if (initialHash && validTabs.includes(initialHash)) {
+      setActiveTab(initialHash);
+    } else if (isLoggedIn) {
+      window.location.hash = activeTab;
+    }
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isLoggedIn]);
+
+  // Update hash when activeTab changes (so it goes to browser history)
+  useEffect(() => {
+    if (isLoggedIn) {
+      const currentHash = window.location.hash.replace('#', '');
+      if (currentHash !== activeTab) {
+        window.location.hash = activeTab;
+      }
+    }
+  }, [activeTab, isLoggedIn]);
   
   const [newProject, setNewProject] = useState({ name: '', description: '', deadline: '', priority: 'Medium', teamIds: [] as string[], tags: [] as string[] });
   const [newTask, setNewTask] = useState({ name: '', projectId: '', assigneeId: team[0]?.id || '', dueDate: '', priority: 'Medium' });
