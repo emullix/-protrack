@@ -795,9 +795,8 @@ const Meetings: React.FC<MeetingsProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800">Upcoming Activity</h3>
               <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -823,9 +822,6 @@ const Meetings: React.FC<MeetingsProps> = ({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex gap-4">
-                        <div className={`w-12 h-12 rounded-xl ${meeting.color} flex items-center justify-center text-white shadow-lg shadow-slate-200`}>
-                          <MapPin size={24} />
-                        </div>
                         <div className="space-y-1">
                            <h4 className="font-bold text-slate-800 group-hover:text-brand-600 transition-all">
                             {meeting.status === 'Comment' ? `Comentario: ${meeting.description || ''}` : meeting.title}
@@ -925,35 +921,6 @@ const Meetings: React.FC<MeetingsProps> = ({
               </div>
             )}
           </div>
-        </div>
-
-        <div className="space-y-6">
-
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="font-bold text-slate-800 mb-4">Meeting Stats</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-500">Completion Rate</span>
-                  <span className="font-bold text-slate-700">85%</span>
-                </div>
-                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-3 bg-slate-50 rounded-xl">
-                  <p className="text-xs text-slate-500 mb-1">Total Hours</p>
-                  <p className="text-xl font-bold text-slate-800">24.5h</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl">
-                  <p className="text-xs text-slate-500 mb-1">Total Attendees</p>
-                  <p className="text-xl font-bold text-slate-800">142</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

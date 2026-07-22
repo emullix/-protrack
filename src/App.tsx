@@ -162,7 +162,16 @@ const App: React.FC = () => {
         id: p.id.toString(),
         name: p.title,
         description: p.description,
-        status: p.status || 'In Progress',
+        status: (() => {
+          if (!p.status) return 'In Progress';
+          const lower = p.status.toLowerCase();
+          if (lower === 'active') return 'Active';
+          if (lower === 'in progress') return 'In Progress';
+          if (lower === 'completed') return 'Completed';
+          if (lower === 'at risk') return 'At Risk';
+          if (lower === 'on hold') return 'On Hold';
+          return p.status;
+        })() as ProjectStatus,
         priority: p.priority || 'Medium',
         team: (p.team && p.team.length > 0) 
           ? p.team.map((m: any) => ({
@@ -682,6 +691,10 @@ const App: React.FC = () => {
             setActiveTab={setActiveTab} 
             onProjectClick={handleProjectClick} 
             onTaskClick={handleTaskClick} 
+            onStatClick={(status) => {
+              setProjectFilters(prev => ({ ...prev, status: status as ProjectStatus | 'All' }));
+              setActiveTab('projects');
+            }}
           />
         );
       case 'projects':
