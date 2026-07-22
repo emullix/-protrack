@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout, cu
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
+    <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col h-screen sticky top-0">
       <div className="p-6">
         <h1 className="text-[26px] font-bold tracking-tight text-slate-900 leading-none">ProTrack</h1>
       </div>
