@@ -13,7 +13,8 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { Project, ProjectStatus, Priority, Meeting, User } from '../types';
 import { MEETINGS } from '../constants';
@@ -74,6 +75,24 @@ const Projects: React.FC<ProjectsProps> = ({
   const setFilterTag = (tag: string) => setFilters(prev => ({ ...prev, tag }));
   const setFilterMemberId = (memberId: string) => setFilters(prev => ({ ...prev, memberId }));
   const setShowCompleted = (show: boolean) => setFilters(prev => ({ ...prev, showCompleted: show }));
+
+  const hasActiveFilters = searchQuery !== '' || 
+                          filterPriority !== 'All' || 
+                          filterMemberId !== 'All' || 
+                          filterStatus !== 'All' || 
+                          filterTag !== '' || 
+                          showCompleted !== false;
+
+  const handleClearFilters = () => {
+    setFilters({
+      status: 'All',
+      priority: 'All',
+      memberId: 'All',
+      search: '',
+      tag: '',
+      showCompleted: false
+    });
+  };
 
   // Reset page when filter or search changes
   React.useEffect(() => {
@@ -228,6 +247,15 @@ const Projects: React.FC<ProjectsProps> = ({
                 <span className="ml-2 text-xs font-medium text-slate-500 whitespace-nowrap">Show Completed</span>
               </label>
             </div>
+          )}
+          {hasActiveFilters && (
+            <button 
+              onClick={handleClearFilters}
+              className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+            >
+              <X size={14} />
+              Limpiar filtros
+            </button>
           )}
         </div>
       </div>
