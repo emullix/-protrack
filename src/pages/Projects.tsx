@@ -66,6 +66,7 @@ const Projects: React.FC<ProjectsProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+  const onHoldCount = projects.filter(p => p.status === 'On Hold').length;
 
   const { status: filterStatus, priority: filterPriority, search: searchQuery, tag: filterTag, showCompleted, memberId: filterMemberId } = filters;
 
@@ -101,7 +102,10 @@ const Projects: React.FC<ProjectsProps> = ({
 
   const filteredProjects = projects.filter(p => {
     const statusMatch = filterStatus === 'All' 
-      ? (showCompleted ? true : p.status !== 'Completed')
+      ? (showCompleted 
+          ? true 
+          : (p.status === 'In Progress' || p.status === 'Active')
+        )
       : p.status === filterStatus;
     const priorityMatch = filterPriority === 'All' || p.priority === filterPriority;
     const searchMatch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -235,7 +239,12 @@ const Projects: React.FC<ProjectsProps> = ({
         </div>
         <div className="flex items-center gap-4">
           {filterStatus === 'All' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              {onHoldCount > 0 && (
+                <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                  {onHoldCount} {onHoldCount === 1 ? 'project' : 'projects'} on hold
+                </span>
+              )}
               <label className="relative inline-flex items-center cursor-pointer">
                 <input 
                   type="checkbox" 
