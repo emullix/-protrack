@@ -322,7 +322,8 @@ const Projects: React.FC<ProjectsProps> = ({
 
                 {/* Siguiente Tarea del Proyecto */}
                 {(() => {
-                  const projectTasks = tasks.filter(t => t.projectId === project.id);
+                  const projectTasks = tasks.filter(t => t.projectId === project.id)
+                                            .sort((a, b) => a.position - b.position);
                   const nextTask = projectTasks.find(t => t.status !== 'Completed');
                   if (nextTask) {
                     return (
@@ -467,7 +468,8 @@ const Projects: React.FC<ProjectsProps> = ({
                     </td>
                     <td className="px-6 py-2">
                       {(() => {
-                        const projectTasks = tasks.filter(t => t.projectId === project.id);
+                        const projectTasks = tasks.filter(t => t.projectId === project.id)
+                                                  .sort((a, b) => a.position - b.position);
                         const nextTask = projectTasks.find(t => t.status !== 'Completed');
                         return (
                           <div className="flex flex-col gap-1 w-full max-w-[150px]">

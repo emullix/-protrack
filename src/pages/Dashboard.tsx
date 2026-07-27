@@ -242,7 +242,8 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
                   </td>
                   <td className="px-6 py-4">
                     {(() => {
-                      const projectTasks = tasks.filter(t => t.projectId === project.id);
+                      const projectTasks = tasks.filter(t => t.projectId === project.id)
+                                                .sort((a, b) => a.position - b.position);
                       const nextTask = projectTasks.find(t => t.status !== 'Completed');
                       return (
                         <div className="w-full max-w-[120px] flex flex-col gap-1">
