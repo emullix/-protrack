@@ -29,6 +29,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Rewrite /api/* to /* for API requests
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    req.url = req.url.substring(4);
+    if (req.url === '') req.url = '/';
+  }
+  next();
+});
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/projects', projectRoutes);
