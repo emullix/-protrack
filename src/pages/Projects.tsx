@@ -16,7 +16,7 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
-import { Project, ProjectStatus, Priority, Meeting, User } from '../types';
+import { Project, ProjectStatus, Priority, Meeting, User, Task } from '../types';
 import { MEETINGS } from '../constants';
 import { formatDate, getInitials, getAvatarColor } from '../utils';
 import Tooltip from '../components/Tooltip';
@@ -24,6 +24,7 @@ import Tooltip from '../components/Tooltip';
 interface ProjectsProps {
   projects: Project[];
   meetings: Meeting[];
+  tasks: Task[];
   setActiveTab: (tab: string) => void;
   onEdit: (project: Project) => void;
   onDelete: (projectId: string) => void;
@@ -53,6 +54,7 @@ interface ProjectsProps {
 const Projects: React.FC<ProjectsProps> = ({ 
   projects, 
   meetings, 
+  tasks,
   setActiveTab, 
   onEdit, 
   onDelete, 
@@ -315,6 +317,30 @@ const Projects: React.FC<ProjectsProps> = ({
                         {tag}
                       </span>
                     ))}
+                  </div>
+                )}
+
+                {/* Siguiente Tarea del Proyecto */}
+                {(() => {
+                  const projectTasks = tasks.filter(t => t.projectId === project.id);
+                  const nextTask = projectTasks.find(t => t.status !== 'Completed');
+                  if (nextTask) {
+                    return (
+                      <div className="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Siguiente Tarea</p>
+                          <p className="text-xs text-slate-700 font-semibold truncate mt-0.5" title={nextTask.name}>{nextTask.name}</p>
+                        </div>
+                        <span className="px-2 py-0.5 bg-brand-50 text-brand-600 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                          {nextTask.status}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })() || (
+                  <div className="mb-4 bg-slate-50/50 p-3 rounded-lg border border-dashed border-slate-200 text-center">
+                    <p className="text-xs text-slate-400 italic">No hay tareas pendientes</p>
                   </div>
                 )}
 

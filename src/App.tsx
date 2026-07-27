@@ -768,6 +768,7 @@ const App: React.FC = () => {
           <Projects 
             projects={projectsWithStats} 
             meetings={meetings} 
+            tasks={tasks}
             setActiveTab={setActiveTab} 
             onEdit={startEditingProject} 
             onDelete={deleteProject} 
