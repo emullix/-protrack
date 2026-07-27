@@ -12,12 +12,13 @@ import {
 } from 'lucide-react';
 import { Project, Meeting, Task, User } from '../types';
 import { PROJECTS as ALL_PROJECTS } from '../constants';
-import { formatDate, getInitials, getAvatarColor } from '../utils';
+import { formatDate, getInitials, getAvatarColor, formatRelativeTimeSp } from '../utils';
 
 interface DashboardProps {
   projects: Project[];
   tasks: Task[];
   meetings: Meeting[];
+  activities: any[];
   team: User[];
   currentUser: User | null;
   setActiveTab: (tab: string) => void;
@@ -26,7 +27,7 @@ interface DashboardProps {
   onStatClick?: (status: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, team, currentUser, setActiveTab, onProjectClick, onTaskClick, onStatClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activities, team, currentUser, setActiveTab, onProjectClick, onTaskClick, onStatClick }) => {
   const stats = [
     { label: 'Total Projects', value: projects.length.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+2 this month' },
     { label: 'Active', value: projects.filter(p => p.status === 'Active').length.toString(), icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50', trend: 'Starting up' },
@@ -84,86 +85,79 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, team, 
       </div>
       <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-slate-800">Recent Activity</h3>
+          <h3 className="text-lg font-bold text-slate-800">Actividad Reciente</h3>
           <button 
             onClick={() => setActiveTab('meetings')}
             className="text-brand-600 text-sm font-medium hover:underline"
           >
-            View All
+            Ver Todo
           </button>
         </div>
         <div className="space-y-6">
-          {(() => {
-            const now = Date.now();
-            const parseDateTime = (dateStr: string, timeStr: string) => {
-              try {
-                const [timePart] = timeStr.split(' - ');
-                return new Date(`${dateStr} ${timePart}`).getTime();
-              } catch (e) {
-                return new Date(dateStr).getTime() || 0;
-              }
-            };
-
-            const sortedMeetings = [...meetings].sort((a, b) => 
-              parseDateTime(b.date, b.time) - parseDateTime(a.date, a.time)
-            ).slice(0, 5);
-
-            if (sortedMeetings.length === 0) {
-              return (
-                <div className="text-center py-8">
-                  <p className="text-sm text-slate-500">No recent activity found.</p>
-                </div>
+          {activities.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-slate-500">No se encontró actividad reciente.</p>
+            </div>
+          ) : (
+            activities.slice(0, 5).map((activity) => {
+              let member = team.find(
+                m => m.email === activity.username || 
+                     m.name === activity.username || 
+                     m.email === activity.userName || 
+                     m.name === activity.userName
               );
-            }
-
-            return sortedMeetings.map((meeting) => {
-              const meetingTime = parseDateTime(meeting.date, meeting.time);
-              const isPast = meetingTime < now;
               
-              // Find associated member
-              let member = team.find(m => m.id === meeting.memberId);
-              
-              if (!member && meeting.taskId) {
-                const task = tasks.find(t => t.id === meeting.taskId);
-                if (task) member = task.assignee;
-              }
-              
-              if (!member && meeting.projectId) {
-                const project = projects.find(p => p.id === meeting.projectId);
-                if (project && project.team.length > 0) member = project.team[0];
-              }
-              
-              if (!member) member = currentUser || team[0];
+              const authorName = member ? member.name : (activity.userName || activity.username || 'Sistema');
+              const avatarName = member ? member.name : authorName;
 
               return (
-                <div key={meeting.id} className="flex gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm flex-shrink-0 ${getAvatarColor(member.name)}`}>
-                    {getInitials(member.name)}
+                <div key={activity.id} className="flex gap-4 items-start">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm flex-shrink-0 ${getAvatarColor(avatarName)}`}>
+                    {getInitials(avatarName)}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-slate-800">
-                      <span className="font-semibold">{member.name}</span> {isPast ? 'hosted' : 'scheduled'}{' '}
-                      <span 
-                        className={`font-medium text-brand-600 cursor-pointer hover:underline`}
-                        onClick={() => {
-                          if (meeting.taskId && meeting.projectId && onTaskClick) {
-                            onTaskClick(meeting.taskId, meeting.projectId);
-                          } else if (meeting.projectId && onProjectClick) {
-                            onProjectClick(meeting.projectId);
-                          }
-                        }}
-                      >
-                        {meeting.title}
-                      </span>
+                      <span className="font-semibold">{authorName}</span>{' '}
+                      <span>{activity.details}</span>
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {meeting.taskName || meeting.projectName || meeting.location} • {formatDate(meeting.date)} at {meeting.time}
+                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                      <Clock size={12} />
+                      <span>{formatRelativeTimeSp(activity.created_at)}</span>
+                      {activity.entity_type === 'project' && activity.entity_id && onProjectClick && (
+                        <>
+                          <span>•</span>
+                          <button 
+                            onClick={() => onProjectClick(activity.entity_id.toString())}
+                            className="text-brand-600 hover:underline font-medium"
+                          >
+                            Ver Proyecto
+                          </button>
+                        </>
+                      )}
+                      {activity.entity_type === 'task' && activity.entity_id && onTaskClick && (
+                        <>
+                          <span>•</span>
+                          <button 
+                            onClick={() => {
+                              const taskObj = tasks.find(t => t.id === activity.entity_id.toString());
+                              if (taskObj) {
+                                onTaskClick(activity.entity_id.toString(), taskObj.projectId);
+                              } else {
+                                setActiveTab('tasks');
+                              }
+                            }}
+                            className="text-brand-600 hover:underline font-medium"
+                          >
+                            Ver Tarea
+                          </button>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
               );
-            });
-          })()}
+            })
+          )}
         </div>
       </div>
 

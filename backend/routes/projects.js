@@ -1,6 +1,7 @@
 import express from 'express';
 import { dbPromise } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = express.Router();
 
@@ -36,6 +37,8 @@ router.post('/', authMiddleware, async (req, res) => {
   
   const projectId = result.lastID;
   
+  await logActivity(req.user.userId, 'create', 'project', projectId, name, `Creado el proyecto "${name}"`);
+  
   if (teamIds && Array.isArray(teamIds)) {
     for (const memberId of teamIds) {
       await db.run('INSERT INTO project_members (project_id, member_id) VALUES (?, ?)', [projectId, memberId]);
@@ -52,6 +55,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
   
   const project = await db.get('SELECT * FROM projects WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
   if (!project) return res.status(404).json({ message: 'Project not found' });
+
+  const oldStatus = project.status;
+  const newStatus = status || project.status;
+  const oldTitle = project.title;
+  const newTitle = name || project.title;
 
   await db.run(
     'UPDATE projects SET title = ?, description = ?, status = ?, priority = ?, deadline = ?, tags = ? WHERE id = ?', 
@@ -73,6 +81,22 @@ router.put('/:id', authMiddleware, async (req, res) => {
       await db.run('INSERT INTO project_members (project_id, member_id) VALUES (?, ?)', [req.params.id, memberId]);
     }
   }
+
+  let detailsText = `Actualizó el proyecto "${newTitle}"`;
+  if (oldStatus !== newStatus) {
+    const statusMap = {
+      'Active': 'Activo',
+      'In Progress': 'En progreso',
+      'Completed': 'Completado',
+      'At Risk': 'En riesgo',
+      'On Hold': 'En espera'
+    };
+    const oldStatusSp = statusMap[oldStatus] || oldStatus;
+    const newStatusSp = statusMap[newStatus] || newStatus;
+    detailsText = `Cambió el estado del proyecto "${newTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
+  }
+  
+  await logActivity(req.user.userId, 'update', 'project', req.params.id, newTitle, detailsText);
   
   res.json({ message: 'Project updated' });
 });
@@ -80,9 +104,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // DELETE /projects/:id
 router.delete('/:id', authMiddleware, async (req, res) => {
   const db = await dbPromise;
-  const result = await db.run('DELETE FROM projects WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
   
-  if (result.changes === 0) return res.status(404).json({ message: 'Project not found' });
+  const project = await db.get('SELECT title FROM projects WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
+  if (!project) return res.status(404).json({ message: 'Project not found' });
+  
+  await db.run('DELETE FROM projects WHERE id = ?', [req.params.id]);
+  
+  await logActivity(req.user.userId, 'delete', 'project', req.params.id, project.title, `Eliminó el proyecto "${project.title}"`);
   
   res.json({ message: 'Project deleted' });
 });

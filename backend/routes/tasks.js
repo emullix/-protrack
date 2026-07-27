@@ -1,6 +1,7 @@
 import express from 'express';
 import { dbPromise } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = express.Router();
 
@@ -47,7 +48,10 @@ router.post('/', authMiddleware, async (req, res) => {
     [project_id, title, description, due_date, assignee_id, priority || 'Medium', position]
   );
   
-  res.status(201).json({ id: result.lastID, project_id, title, description, due_date, assignee_id, priority: priority || 'Medium' });
+  const taskId = result.lastID;
+  await logActivity(req.user.userId, 'create', 'task', taskId, title, `Creado la tarea "${title}"`);
+  
+  res.status(201).json({ id: taskId, project_id, title, description, due_date, assignee_id, priority: priority || 'Medium' });
 });
 
 // PUT /tasks/:id
@@ -63,6 +67,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
   
   if (!task) return res.status(404).json({ message: 'Task not found' });
 
+  const oldStatus = task.status;
+  const newStatus = status || task.status;
+  const finalTitle = title || task.title;
+
   await db.run(
     'UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ?, assignee_id = ?, priority = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
     [
@@ -75,6 +83,30 @@ router.put('/:id', authMiddleware, async (req, res) => {
       req.params.id
     ]
   );
+
+  let detailsText = `Actualizó la tarea "${finalTitle}"`;
+  let actionType = 'update';
+  
+  if (oldStatus !== newStatus) {
+    const statusMap = {
+      'To Do': 'Por hacer',
+      'In Progress': 'En progreso',
+      'Review': 'En revisión',
+      'Completed': 'Completada'
+    };
+    const oldStatusSp = statusMap[oldStatus] || oldStatus;
+    const newStatusSp = statusMap[newStatus] || newStatus;
+    
+    if (newStatus === 'Completed') {
+      actionType = 'complete';
+      detailsText = `Completó la tarea "${finalTitle}"`;
+    } else {
+      actionType = 'update_status';
+      detailsText = `Cambió el estado de la tarea "${finalTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
+    }
+  }
+
+  await logActivity(req.user.userId, actionType, 'task', req.params.id, finalTitle, detailsText);
   
   res.json({ message: 'Task updated' });
 });
@@ -92,6 +124,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   if (!task) return res.status(404).json({ message: 'Task not found' });
 
   await db.run('DELETE FROM tasks WHERE id = ?', [req.params.id]);
+  
+  await logActivity(req.user.userId, 'delete', 'task', req.params.id, task.title, `Eliminó la tarea "${task.title}"`);
   
   res.json({ message: 'Task deleted' });
 });

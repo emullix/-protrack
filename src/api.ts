@@ -287,6 +287,14 @@ const api = {
       });
       return handleResponse(resp);
     }
+  },
+  activities: {
+    list: async () => {
+      const resp = await fetch(`${API_BASE_URL}/activities`, {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      });
+      return handleResponse(resp);
+    }
   }
 };
 

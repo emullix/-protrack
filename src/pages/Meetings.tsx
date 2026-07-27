@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MapPin, Clock, Users, Calendar as CalendarIcon, Plus, Trash2, Edit2, Briefcase, CheckSquare, X, ChevronLeft, ChevronDown, Search, ChevronRight as LucideChevronRight } from 'lucide-react';
 import { Meeting, Project, Task, User, ProjectStatus, Priority } from '../types';
-import { formatDate, formatTime } from '../utils';
+import { formatDate, formatTime, getInitials, getAvatarColor, formatRelativeTimeSp } from '../utils';
 
 interface MeetingsProps {
   meetings: Meeting[];
@@ -33,10 +33,12 @@ interface MeetingsProps {
   onDelete?: (id: string) => void;
   onQuickProject?: (name: string) => Promise<string>;
   onQuickTask?: (name: string, projectId: string) => Promise<void>;
+  activities: any[];
 }
 
 const Meetings: React.FC<MeetingsProps> = ({ 
   meetings, 
+  activities,
   projects,
   tasks,
   team,
@@ -51,6 +53,10 @@ const Meetings: React.FC<MeetingsProps> = ({
   onQuickProject,
   onQuickTask
 }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'meetings' | 'log'>('meetings');
+  const [logSearch, setLogSearch] = useState('');
+  const [logFilter, setLogFilter] = useState<'all' | 'project' | 'task'>('all');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCommentOnly, setIsCommentOnly] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -295,7 +301,159 @@ const Meetings: React.FC<MeetingsProps> = ({
         </div>
       </div>
 
-      {/* Activity Filters */}
+      {/* Selector de Pestañas */}
+      <div className="flex border-b border-slate-200 mb-6">
+        <button
+          onClick={() => setActiveSubTab('meetings')}
+          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${activeSubTab === 'meetings' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          Sesiones de Sincronización
+        </button>
+        <button
+          onClick={() => setActiveSubTab('log')}
+          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${activeSubTab === 'log' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          Bitácora de Actividades
+        </button>
+      </div>
+
+      {activeSubTab === 'log' ? (
+        <div className="space-y-6">
+          {/* Filtros para la Bitácora */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+            <div className="relative flex-1 w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Buscar en la bitácora..." 
+                value={logSearch}
+                onChange={(e) => setLogSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+            <div className="relative w-full sm:w-auto min-w-[150px]">
+              <select 
+                value={logFilter}
+                onChange={(e) => setLogFilter(e.target.value as any)}
+                className="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
+              >
+                <option value="all">Todas las Entidades</option>
+                <option value="project">Solo Proyectos</option>
+                <option value="task">Solo Tareas</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Historial en formato Timeline */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="relative border-l-2 border-slate-100 pl-6 ml-4 space-y-8">
+              {(() => {
+                const filteredActivities = activities.filter(activity => {
+                  const matchesSearch = activity.details.toLowerCase().includes(logSearch.toLowerCase()) || 
+                                        (activity.userName || activity.username || '').toLowerCase().includes(logSearch.toLowerCase());
+                  const matchesType = logFilter === 'all' || activity.entity_type === logFilter;
+                  return matchesSearch && matchesType;
+                });
+
+                if (filteredActivities.length === 0) {
+                  return (
+                    <div className="text-center py-12 -ml-6">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                        <Clock size={32} />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-800 mb-1">No se encontraron actividades</h4>
+                      <p className="text-slate-500">Prueba haciendo cambios en la app o cambiando los filtros.</p>
+                    </div>
+                  );
+                }
+
+                return filteredActivities.map((activity) => {
+                  let member = team.find(
+                    m => m.email === activity.username || 
+                         m.name === activity.username || 
+                         m.email === activity.userName || 
+                         m.name === activity.userName
+                  );
+                  
+                  const authorName = member ? member.name : (activity.userName || activity.username || 'Sistema');
+                  const avatarName = member ? member.name : authorName;
+
+                  let Icon = Clock;
+                  let colorClass = 'bg-slate-50 text-slate-600 border-slate-100';
+                  
+                  if (activity.action === 'create') {
+                    Icon = Plus;
+                    colorClass = 'bg-blue-50 text-blue-600 border-blue-100';
+                  } else if (activity.action === 'complete') {
+                    Icon = CheckSquare;
+                    colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                  } else if (activity.action === 'update' || activity.action === 'update_status') {
+                    Icon = Edit2;
+                    colorClass = 'bg-amber-50 text-amber-600 border-amber-100';
+                  } else if (activity.action === 'delete') {
+                    Icon = Trash2;
+                    colorClass = 'bg-rose-50 text-rose-600 border-rose-100';
+                  }
+
+                  return (
+                    <div key={activity.id} className="relative group">
+                      <div className={`absolute -left-[38px] top-0 w-8 h-8 rounded-full border-2 flex items-center justify-center shadow-sm z-10 transition-all group-hover:scale-110 ${colorClass}`}>
+                        <Icon size={14} />
+                      </div>
+
+                      <div className="bg-slate-50/50 hover:bg-slate-50 p-4 rounded-xl border border-slate-100 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex gap-3 items-start">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0 ${getAvatarColor(avatarName)}`}>
+                            {getInitials(avatarName)}
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-800 font-medium">
+                              <span className="font-bold text-slate-900">{authorName}</span>{' '}
+                              <span>{activity.details}</span>
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                              <Clock size={12} />
+                              <span>{formatRelativeTimeSp(activity.created_at)}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {activity.entity_type === 'project' && activity.entity_id && (
+                            <button 
+                              onClick={() => {
+                                onFilter?.({ projectId: activity.entity_id.toString() });
+                                setActiveSubTab('meetings');
+                              }}
+                              className="text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              Filtrar Reuniones
+                            </button>
+                          )}
+                          {activity.entity_type === 'task' && activity.entity_id && (
+                            <button 
+                              onClick={() => {
+                                onFilter?.({ taskId: activity.entity_id.toString() });
+                                setActiveSubTab('meetings');
+                              }}
+                              className="text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              Filtrar Reuniones
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Activity Filters */}
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
         <div className="flex items-center gap-4 w-full sm:w-auto flex-wrap">
           <div className="relative flex-1 sm:w-64 min-w-[200px]">
@@ -921,8 +1079,10 @@ const Meetings: React.FC<MeetingsProps> = ({
               </div>
             )}
           </div>
-      </div>
-    </div>
+        </div>
+      </>
+    )}
+  </div>
   );
 };
 

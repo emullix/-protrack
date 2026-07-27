@@ -75,6 +75,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout, cu
         </button>
       </nav>
 
+      <div className="px-7 py-3 text-left min-w-0">
+        <p className="text-base font-bold text-slate-950 truncate leading-snug">
+          {currentUser?.name || 'Esteban Mullix'}
+        </p>
+        <p className="text-xs font-bold text-brand-600 mt-0.5 leading-none">
+          {currentUser?.role || 'Admin'}
+        </p>
+      </div>
+
       <div className="p-4 border-t border-slate-100 space-y-1">
         <button 
           onClick={() => setActiveTab('settings')}
@@ -88,16 +97,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout, cu
           )} />
           Settings
         </button>
-
-        {/* User profile block below Settings */}
-        <div className="px-3 py-1.5 text-left min-w-0">
-          <p className="text-base font-bold text-slate-950 truncate leading-snug">
-            {currentUser?.name || 'Esteban Mullix'}
-          </p>
-          <p className="text-xs font-bold text-brand-600 mt-0.5 leading-none">
-            {currentUser?.role || 'Admin'}
-          </p>
-        </div>
 
         <button 
           onClick={onLogout}

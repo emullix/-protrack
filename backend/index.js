@@ -9,6 +9,7 @@ import taskRoutes from './routes/tasks.js';
 import memberRoutes from './routes/members.js';
 import meetingRoutes from './routes/meetings.js';
 import rolesRoutes from './routes/roles.js';
+import activityLogsRoutes from './routes/activity_logs.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -33,6 +34,7 @@ app.use('/tasks', taskRoutes);
 app.use('/members', memberRoutes);
 app.use('/meetings', meetingRoutes);
 app.use('/roles', rolesRoutes);
+app.use('/activities', activityLogsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

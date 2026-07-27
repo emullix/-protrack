@@ -1,6 +1,7 @@
 import express from 'express';
 import { dbPromise } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = express.Router();
 
@@ -38,8 +39,55 @@ router.post('/', authMiddleware, async (req, res) => {
       [req.user.userId, title, date, time, location, attendees || 1, description, status || 'Upcoming', project_id || null, task_id || null, member_id || null]
     );
     
+    const meetingId = result.lastID;
+    
+    // Log activity
+    let detailsText = '';
+    let entityType = 'project';
+    let entityId = project_id || null;
+    let entityName = '';
+    
+    if (status === 'Comment') {
+      if (task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [task_id]);
+        entityType = 'task';
+        entityId = task_id;
+        entityName = task ? task.title : 'Tarea';
+        detailsText = `Comentó en la tarea "${entityName}": "${description}"`;
+      } else if (project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [project_id]);
+        entityType = 'project';
+        entityId = project_id;
+        entityName = project ? project.title : 'Proyecto';
+        detailsText = `Comentó en el proyecto "${entityName}": "${description}"`;
+      } else {
+        entityType = 'project';
+        detailsText = `Agregó un comentario: "${description}"`;
+      }
+      await logActivity(req.user.userId, 'comment', entityType, entityId || 0, entityName || 'Comentario', detailsText);
+    } else {
+      let entityType = 'project';
+      let entityId = project_id || 0;
+      let entityName = title;
+      detailsText = `Programó la reunión "${title}"`;
+      
+      if (task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [task_id]);
+        entityType = 'task';
+        entityId = task_id;
+        entityName = task ? task.title : 'Tarea';
+        detailsText = `Programó la reunión "${title}" para la tarea "${entityName}"`;
+      } else if (project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [project_id]);
+        entityType = 'project';
+        entityId = project_id;
+        entityName = project ? project.title : '';
+      }
+      await logActivity(req.user.userId, 'create', entityType, entityId, entityName, detailsText);
+    }
+    
     res.status(201).json({ 
-      id: result.lastID, 
+      id: meetingId, 
       title, date, time, location, attendees, description, status, project_id, task_id, member_id
     });
   } catch (err) {
@@ -59,6 +107,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Meeting not found' });
     }
 
+    const oldStatus = meeting.status;
+    const newStatus = status || meeting.status;
+    const finalTitle = title || meeting.title;
+
     await db.run(
       'UPDATE meetings SET title = ?, date = ?, time = ?, location = ?, attendees = ?, description = ?, status = ?, project_id = ?, task_id = ?, member_id = ? WHERE id = ?',
       [
@@ -75,6 +127,38 @@ router.put('/:id', authMiddleware, async (req, res) => {
         req.params.id
       ]
     );
+
+    if (oldStatus !== newStatus) {
+      let entityType = 'project';
+      let entityId = meeting.project_id || 0;
+      let entityName = finalTitle;
+      
+      if (meeting.task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [meeting.task_id]);
+        entityType = 'task';
+        entityId = meeting.task_id;
+        entityName = task ? task.title : 'Tarea';
+      } else if (meeting.project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [meeting.project_id]);
+        entityName = project ? project.title : '';
+      }
+
+      if (newStatus === 'Completed') {
+        await logActivity(req.user.userId, 'complete', entityType, entityId, entityName, `Completó la reunión "${finalTitle}"`);
+      } else if (newStatus === 'Cancelled') {
+        await logActivity(req.user.userId, 'cancel', entityType, entityId, entityName, `Canceló la reunión "${finalTitle}"`);
+      }
+    } else if (newStatus === 'Comment' && description !== undefined && description !== meeting.description) {
+      let entityName = '';
+      if (meeting.task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [meeting.task_id]);
+        entityName = task ? task.title : 'Tarea';
+      } else if (meeting.project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [meeting.project_id]);
+        entityName = project ? project.title : 'Proyecto';
+      }
+      await logActivity(req.user.userId, 'update_comment', meeting.task_id ? 'task' : 'project', meeting.task_id || meeting.project_id || 0, entityName || 'Comentario', `Actualizó su comentario en "${entityName}": "${description}"`);
+    }
     
     res.json({ message: 'Meeting updated' });
   } catch (err) {
@@ -87,10 +171,39 @@ router.put('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const db = await dbPromise;
-    const result = await db.run('DELETE FROM meetings WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
+    const meeting = await db.get('SELECT * FROM meetings WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
     
-    if (result.changes === 0) {
+    if (!meeting) {
       return res.status(404).json({ message: 'Meeting not found' });
+    }
+
+    await db.run('DELETE FROM meetings WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
+    
+    if (meeting.status === 'Comment') {
+      let entityName = '';
+      if (meeting.task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [meeting.task_id]);
+        entityName = task ? task.title : 'Tarea';
+      } else if (meeting.project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [meeting.project_id]);
+        entityName = project ? project.title : 'Proyecto';
+      }
+      await logActivity(req.user.userId, 'delete_comment', meeting.task_id ? 'task' : 'project', meeting.task_id || meeting.project_id || 0, entityName || 'Comentario', `Eliminó un comentario en "${entityName || 'Comentario'}"`);
+    } else {
+      let entityType = 'project';
+      let entityId = meeting.project_id || 0;
+      let entityName = meeting.title;
+      
+      if (meeting.task_id) {
+        const task = await db.get('SELECT title FROM tasks WHERE id = ?', [meeting.task_id]);
+        entityType = 'task';
+        entityId = meeting.task_id;
+        entityName = task ? task.title : 'Tarea';
+      } else if (meeting.project_id) {
+        const project = await db.get('SELECT title FROM projects WHERE id = ?', [meeting.project_id]);
+        entityName = project ? project.title : '';
+      }
+      await logActivity(req.user.userId, 'delete', entityType, entityId, entityName, `Eliminó la reunión "${meeting.title}"`);
     }
     
     res.json({ message: 'Meeting deleted' });

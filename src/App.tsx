@@ -36,6 +36,7 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<User[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS);
+  const [activities, setActivities] = useState<any[]>([]);
 
   // Listen to hashchange events (browser back/forward buttons)
   useEffect(() => {
@@ -169,13 +170,14 @@ const App: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [projectsData, tasksData, membersData, meetingsData] = await Promise.all([
+      const [projectsData, tasksData, membersData, meetingsData, activitiesData] = await Promise.all([
         api.projects.list(),
         api.tasks.list(),
         api.members.list(),
-        api.meetings.list()
+        api.meetings.list(),
+        api.activities.list()
       ]);
-      console.log('API Data:', { projectsData, tasksData, membersData, meetingsData });
+      console.log('API Data:', { projectsData, tasksData, membersData, meetingsData, activitiesData });
       const finalTeam = Array.isArray(membersData) && membersData.length > 0 
         ? membersData.map((m: any) => ({
             id: m.id.toString(),
@@ -265,10 +267,20 @@ const App: React.FC = () => {
       setProjects(mappedProjects);
       setTasks(mappedTasks);
       setMeetings(mappedMeetings);
+      setActivities(activitiesData || []);
     } catch (err) {
       console.error('Failed to fetch data', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      const activitiesData = await api.activities.list();
+      setActivities(activitiesData || []);
+    } catch (err) {
+      console.error('Failed to fetch activities:', err);
     }
   };
 
@@ -383,6 +395,7 @@ const App: React.FC = () => {
       setProjects(prev => [project, ...prev]);
       setNewProject({ name: '', description: '', deadline: '', priority: 'Medium', teamIds: [], tags: [] });
       setNewTagsInput('');
+      fetchActivities();
       setActiveTab('projects');
     } catch (err: any) {
       console.error('Failed to create project', err);
@@ -412,6 +425,7 @@ const App: React.FC = () => {
 
       setTasks([...tasks, task]);
       setNewTask({ name: '', projectId: '', assigneeId: team[0]?.id || '', dueDate: '', priority: 'Medium' });
+      fetchActivities();
       setActiveTab('tasks');
     } catch (err) {
       console.error('Failed to create task', err);
@@ -427,6 +441,7 @@ const App: React.FC = () => {
       setProjects(projects.map(p => p.id === editingProject.id ? projectToUpdate : p));
       setEditingProject(null);
       setEditTagsInput('');
+      fetchActivities();
       setActiveTab('projects');
       alert('Project updated successfully!');
     } catch (err: any) {
@@ -447,6 +462,7 @@ const App: React.FC = () => {
       };
       setTasks(tasks.map(t => t.id === editingTask.id ? updatedTask : t));
       setEditingTask(null);
+      fetchActivities();
       setActiveTab('tasks');
       alert('Task updated successfully!');
     } catch (err: any) {
@@ -512,6 +528,7 @@ const App: React.FC = () => {
       };
       
       setMeetings([...meetings, meeting]);
+      fetchActivities();
     } catch (err) {
       console.error('Failed to schedule meeting', err);
     }
@@ -521,6 +538,7 @@ const App: React.FC = () => {
     try {
       await api.meetings.update(updatedMeeting.id, updatedMeeting);
       setMeetings(meetings.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
+      fetchActivities();
     } catch (err) {
       console.error('Failed to update meeting', err);
     }
@@ -557,6 +575,7 @@ const App: React.FC = () => {
       };
       
       setProjects(prev => [project, ...prev]);
+      fetchActivities();
       return created.id.toString();
     } catch (err) {
       console.error('Failed to quick create project', err);
@@ -589,6 +608,7 @@ const App: React.FC = () => {
         updatedAt: created.updated_at || new Date().toISOString()
       };
       setTasks(prev => [...prev, task]);
+      fetchActivities();
     } catch (err) {
       console.error('Failed to quick create task', err);
     }
@@ -632,6 +652,7 @@ const App: React.FC = () => {
     try {
       await api.tasks.update(taskId, { ...task, status: newStatus });
       setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus, updatedAt: now } : t));
+      fetchActivities();
     } catch (err) {
       console.error('Failed to toggle task status', err);
     }
@@ -641,6 +662,7 @@ const App: React.FC = () => {
     try {
       await api.tasks.delete(taskId);
       setTasks(tasks.filter(t => t.id !== taskId));
+      fetchActivities();
     } catch (err) {
       console.error('Failed to delete task', err);
     }
@@ -651,6 +673,7 @@ const App: React.FC = () => {
       await api.projects.delete(projectId);
       setProjects(projects.filter(p => p.id !== projectId));
       setTasks(tasks.filter(t => t.projectId !== projectId));
+      fetchActivities();
     } catch (err) {
       console.error('Failed to delete project', err);
     }
@@ -728,6 +751,7 @@ const App: React.FC = () => {
             projects={projectsWithStats} 
             tasks={tasks}
             meetings={meetings} 
+            activities={activities}
             team={team}
             currentUser={currentUser}
             setActiveTab={setActiveTab} 
@@ -803,6 +827,7 @@ const App: React.FC = () => {
         return (
           <Meetings 
             meetings={meetings} 
+            activities={activities}
             projects={projectsWithStats} 
             tasks={tasks}
             team={team}
@@ -1335,6 +1360,7 @@ const App: React.FC = () => {
     try {
       await api.meetings.delete(meetingId);
       setMeetings(meetings.filter(m => m.id !== meetingId));
+      fetchActivities();
     } catch (err) {
       console.error('Failed to delete meeting', err);
     }
