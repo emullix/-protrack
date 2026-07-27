@@ -157,6 +157,9 @@ const initializeDb = async () => {
     }
   }
   
+  // Migrate 'pending' status tasks to 'To Do'
+  await db.run("UPDATE tasks SET status = 'To Do' WHERE status = 'pending'");
+  
   return db;
 };
 
