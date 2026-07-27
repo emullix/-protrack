@@ -67,8 +67,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
   
   if (!task) return res.status(404).json({ message: 'Task not found' });
 
-  const oldStatus = task.status;
-  const newStatus = status || task.status;
+  const normalizeStatus = (s) => {
+    const validStatuses = ['To Do', 'In Progress', 'Review', 'Completed'];
+    return validStatuses.includes(s) ? s : 'To Do';
+  };
+
+  const oldStatus = normalizeStatus(task.status);
+  const newStatus = normalizeStatus(status || task.status);
   const finalTitle = title || task.title;
 
   await db.run(

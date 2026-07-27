@@ -56,8 +56,19 @@ router.put('/:id', authMiddleware, async (req, res) => {
   const project = await db.get('SELECT * FROM projects WHERE id = ? AND user_id = ?', [req.params.id, req.user.userId]);
   if (!project) return res.status(404).json({ message: 'Project not found' });
 
-  const oldStatus = project.status;
-  const newStatus = status || project.status;
+  const normalizeProjectStatus = (s) => {
+    if (!s) return 'In Progress';
+    const lower = s.toLowerCase();
+    if (lower === 'active') return 'Active';
+    if (lower === 'in progress') return 'In Progress';
+    if (lower === 'completed') return 'Completed';
+    if (lower === 'at risk') return 'At Risk';
+    if (lower === 'on hold') return 'On Hold';
+    return s;
+  };
+
+  const oldStatus = normalizeProjectStatus(project.status);
+  const newStatus = normalizeProjectStatus(status || project.status);
   const oldTitle = project.title;
   const newTitle = name || project.title;
 
