@@ -412,9 +412,43 @@ const Meetings: React.FC<MeetingsProps> = ({
                               <span className="font-bold text-slate-900">{authorName}</span>{' '}
                               <span>{activity.details}</span>
                             </p>
-                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                            <p className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-1">
                               <Clock size={12} />
                               <span>{formatRelativeTimeSp(activity.created_at)}</span>
+                              {(() => {
+                                let projectObj = null;
+                                let taskObj = null;
+                                
+                                if (activity.entity_type === 'task' && activity.entity_id) {
+                                  taskObj = tasks.find(t => t.id === activity.entity_id.toString());
+                                  if (taskObj) {
+                                    projectObj = projects.find(p => p.id === taskObj.projectId);
+                                  }
+                                } else if (activity.entity_type === 'project' && activity.entity_id) {
+                                  projectObj = projects.find(p => p.id === activity.entity_id.toString());
+                                }
+                                
+                                if (!projectObj && !taskObj) return null;
+                                
+                                return (
+                                  <>
+                                    {projectObj && (
+                                      <>
+                                        <span className="text-slate-300">|</span>
+                                        <span className="font-semibold text-slate-500">Proyecto:</span>
+                                        <span className="text-slate-600">{projectObj.name}</span>
+                                      </>
+                                    )}
+                                    {taskObj && (
+                                      <>
+                                        <span className="text-slate-300">|</span>
+                                        <span className="font-semibold text-slate-500">Tarea:</span>
+                                        <span className="text-slate-600">{taskObj.name}</span>
+                                      </>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </p>
                           </div>
                         </div>
