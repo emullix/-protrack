@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { initializeDb } from './db.js';
 import authRoutes from './routes/auth.js';
@@ -38,6 +40,15 @@ app.use('/activities', activityLogsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Serve Frontend Static Files (Vite Build)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Catch-all route to serve the React App index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // Initialize DB and Start Server
