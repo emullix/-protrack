@@ -253,19 +253,30 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="w-full max-w-[100px]">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-slate-600">{project.progress}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5">
-                        <div 
-                          className={`h-1.5 rounded-full ${
-                            project.status === 'At Risk' ? 'bg-rose-500' : 'bg-brand-500'
-                          }`} 
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    {(() => {
+                      const projectTasks = tasks.filter(t => t.projectId === project.id);
+                      const nextTask = projectTasks.find(t => t.status !== 'Completed');
+                      return (
+                        <div className="w-full max-w-[120px] flex flex-col gap-1">
+                          {nextTask && (
+                            <span className="text-[10px] text-slate-500 truncate max-w-[110px] font-medium" title={nextTask.name}>
+                              {nextTask.name}
+                            </span>
+                          )}
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs font-medium text-slate-600">{project.progress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full ${
+                                project.status === 'At Risk' ? 'bg-rose-500' : 'bg-brand-500'
+                              }`} 
+                              style={{ width: `${project.progress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                     {formatDate(project.deadline)}
