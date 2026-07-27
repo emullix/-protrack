@@ -417,10 +417,9 @@ const Meetings: React.FC<MeetingsProps> = ({
                               <span>{formatRelativeTimeSp(activity.created_at)}</span>
                               {(() => {
                                 let projectObj = null;
-                                let taskObj = null;
                                 
                                 if (activity.entity_type === 'task' && activity.entity_id) {
-                                  taskObj = tasks.find(t => t.id === activity.entity_id.toString());
+                                  const taskObj = tasks.find(t => t.id === activity.entity_id.toString());
                                   if (taskObj) {
                                     projectObj = projects.find(p => p.id === taskObj.projectId);
                                   }
@@ -428,24 +427,13 @@ const Meetings: React.FC<MeetingsProps> = ({
                                   projectObj = projects.find(p => p.id === activity.entity_id.toString());
                                 }
                                 
-                                if (!projectObj && !taskObj) return null;
+                                if (!projectObj) return null;
                                 
                                 return (
                                   <>
-                                    {projectObj && (
-                                      <>
-                                        <span className="text-slate-300">|</span>
-                                        <span className="font-semibold text-slate-500">Proyecto:</span>
-                                        <span className="text-slate-600">{projectObj.name}</span>
-                                      </>
-                                    )}
-                                    {taskObj && (
-                                      <>
-                                        <span className="text-slate-300">|</span>
-                                        <span className="font-semibold text-slate-500">Tarea:</span>
-                                        <span className="text-slate-600">{taskObj.name}</span>
-                                      </>
-                                    )}
+                                    <span className="text-slate-300">|</span>
+                                    <span className="font-semibold text-slate-500">Proyecto:</span>
+                                    <span className="text-slate-600">{projectObj.name}</span>
                                   </>
                                 );
                               })()}
