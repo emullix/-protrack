@@ -143,15 +143,13 @@ router.post('/reorder', authMiddleware, async (req, res) => {
   if (!Array.isArray(taskOrders) || taskOrders.length === 0) return res.status(400).json({ message: 'taskOrders must be a non-empty array' });
 
   try {
-    const ids = taskOrders.map(item => item.id);
-    const caseBranches = taskOrders.map(item => `WHEN id = ? THEN ?`).join(' ');
+    const ids = taskOrders.map(item => parseInt(item.id, 10));
+    const caseBranches = taskOrders.map(() => `WHEN id = ? THEN ?`).join(' ');
     const params = [];
     taskOrders.forEach(item => {
-      params.push(item.id, item.position);
+      params.push(parseInt(item.id, 10), item.position);
     });
-    params.push(ids); // For the WHERE IN clause
 
-    // SQLite doesn't support array params in IN directly with ?, but we can build it
     const placeholders = ids.map(() => '?').join(',');
     
     const query = `
@@ -162,7 +160,7 @@ router.post('/reorder', authMiddleware, async (req, res) => {
       WHERE id IN (${placeholders})
     `;
 
-    const finalParams = [...params.slice(0, -1), ...ids];
+    const finalParams = [...params, ...ids];
 
     await db.run(query, finalParams);
     res.json({ message: 'Tasks reordered successfully' });

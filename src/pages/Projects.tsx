@@ -175,77 +175,75 @@ const Projects: React.FC<ProjectsProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search projects..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
-          </div>
-          <div className="relative group">
-            <select 
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value as any)}
-              className="appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
-            >
-              <option value="All">All Priority</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-          <div className="relative group min-w-[150px]">
-            <select 
-              value={filterMemberId}
-              onChange={(e) => setFilterMemberId(e.target.value)}
-              className="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
-            >
-              <option value="All">All Members</option>
-              {team.map(member => (
-                <option key={member.id} value={member.id}>{member.name}</option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-          <div className="relative group min-w-[130px]">
-            <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
-            >
-              <option value="All">All Status</option>
-              <option value="Active">Active</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="At Risk">At Risk</option>
-              <option value="On Hold">On Hold</option>
-            </select>
-            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-          <div className="relative flex-1 sm:w-48">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Filter by tag..." 
-              value={filterTag}
-              onChange={(e) => setFilterTag(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
-          </div>
+      <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input 
+            type="text" 
+            placeholder="Search projects..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="relative group w-full sm:w-auto">
+          <select 
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value as any)}
+            className="w-full sm:w-auto appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
+          >
+            <option value="All">All Priority</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative group w-full sm:w-[150px]">
+          <select 
+            value={filterMemberId}
+            onChange={(e) => setFilterMemberId(e.target.value)}
+            className="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
+          >
+            <option value="All">All Members</option>
+            {team.map(member => (
+              <option key={member.id} value={member.id}>{member.name}</option>
+            ))}
+          </select>
+          <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative group w-full sm:w-[130px]">
+          <select 
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as any)}
+            className="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="At Risk">At Risk</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+          <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative w-full sm:w-48">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input 
+            type="text" 
+            placeholder="Filter by tag..." 
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3 sm:ml-auto w-full sm:w-auto justify-between sm:justify-end">
           {filterStatus === 'All' && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
               {onHoldCount > 0 && (
                 <button 
                   onClick={() => setFilterStatus('On Hold')}
-                  className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 px-2.5 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer"
+                  className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all cursor-pointer"
                 >
                   {onHoldCount} {onHoldCount === 1 ? 'project' : 'projects'} on hold
                 </button>
@@ -265,7 +263,7 @@ const Projects: React.FC<ProjectsProps> = ({
           {hasActiveFilters && (
             <button 
               onClick={handleClearFilters}
-              className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+              className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap"
             >
               <X size={14} />
               Limpiar filtros

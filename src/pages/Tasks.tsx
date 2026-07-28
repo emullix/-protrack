@@ -204,9 +204,7 @@ const Tasks: React.FC<TasksProps> = ({
     const projectCompare = nameA.localeCompare(nameB);
     if (projectCompare !== 0) return projectCompare;
 
-    const dateA = a.dueDate || '';
-    const dateB = b.dueDate || '';
-    return dateA.localeCompare(dateB);
+    return (a.position || 0) - (b.position || 0);
   });
 
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
