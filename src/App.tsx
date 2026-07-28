@@ -389,7 +389,7 @@ const App: React.FC = () => {
         id: created.id.toString(),
         name: created.title || newProject.name,
         description: created.description || newProject.description,
-        status: 'In Progress',
+        status: (created.status || 'Active') as ProjectStatus,
         priority: (created.priority || newProject.priority) as any,
         team: projectTeam,
         deadline: created.deadline || newProject.deadline || new Date().toISOString().split('T')[0],

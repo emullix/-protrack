@@ -45,7 +45,7 @@ router.post('/', authMiddleware, async (req, res) => {
     }
   }
   
-  res.status(201).json({ id: projectId, title: name, description, deadline, priority: priority || 'Medium', teamIds, tags });
+  res.status(201).json({ id: projectId, title: name, description, status: 'Active', deadline, priority: priority || 'Medium', teamIds, tags });
 });
 
 // PUT /projects/:id
