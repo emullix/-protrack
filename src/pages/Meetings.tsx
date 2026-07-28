@@ -278,12 +278,21 @@ const Meetings: React.FC<MeetingsProps> = ({
           )}
           <button 
             onClick={() => {
+              const preselectedTaskId = filter?.taskId || '';
+              let preselectedProjectId = filter?.projectId || '';
+              if (preselectedTaskId && !preselectedProjectId) {
+                const foundTask = tasks.find(t => String(t.id) === String(preselectedTaskId));
+                if (foundTask && foundTask.projectId) {
+                  preselectedProjectId = String(foundTask.projectId);
+                }
+              }
+
               const initialMeeting = {
                 title: '',
                 date: format(new Date(), 'yyyy-MM-dd'),
                 time: format(new Date(), 'HH:mm'),
-                projectId: filter?.projectId || (filters.memberId !== 'All' ? projects.find(p => p.team.some(m => m.id === filters.memberId))?.id || '' : ''),
-                taskId: filter?.taskId || '',
+                projectId: preselectedProjectId || (filters.memberId !== 'All' ? projects.find(p => p.team.some(m => m.id === filters.memberId))?.id || '' : ''),
+                taskId: preselectedTaskId,
                 memberId: filters.memberId !== 'All' ? filters.memberId : '',
                 location: 'Conference Room A',
                 description: ''
@@ -621,7 +630,22 @@ const Meetings: React.FC<MeetingsProps> = ({
                   </label>
                   <select 
                     value={newMeeting.taskId}
-                    onChange={(e) => setNewMeeting({...newMeeting, taskId: e.target.value})}
+                    onChange={(e) => {
+                      const taskId = e.target.value;
+                      const selectedTask = tasks.find(t => String(t.id) === String(taskId));
+                      if (selectedTask && selectedTask.projectId) {
+                        setNewMeeting({
+                          ...newMeeting,
+                          taskId: taskId,
+                          projectId: String(selectedTask.projectId)
+                        });
+                      } else {
+                        setNewMeeting({
+                          ...newMeeting,
+                          taskId: taskId
+                        });
+                      }
+                    }}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 bg-white"
                   >
                     <option value="">None</option>
