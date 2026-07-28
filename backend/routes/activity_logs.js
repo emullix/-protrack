@@ -15,7 +15,7 @@ router.get('/', authMiddleware, async (req, res) => {
       FROM activity_logs al
       JOIN users u ON al.user_id = u.id
       WHERE al.user_id = ?
-      ORDER BY al.created_at DESC
+      ORDER BY al.created_at DESC, al.id DESC
       LIMIT 100
     `, [req.user.userId]);
     
