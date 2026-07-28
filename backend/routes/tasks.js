@@ -89,9 +89,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
     ]
   );
 
-  let detailsText = `Actualizó la tarea "${finalTitle}"`;
-  let actionType = 'update';
-  
   if (oldStatus !== newStatus) {
     const statusMap = {
       'To Do': 'Por hacer',
@@ -102,16 +99,16 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const oldStatusSp = statusMap[oldStatus] || oldStatus;
     const newStatusSp = statusMap[newStatus] || newStatus;
     
+    let actionType = 'update_status';
+    let detailsText = `Cambió el estado de la tarea "${finalTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
+    
     if (newStatus === 'Completed') {
       actionType = 'complete';
       detailsText = `Completó la tarea "${finalTitle}"`;
-    } else {
-      actionType = 'update_status';
-      detailsText = `Cambió el estado de la tarea "${finalTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
     }
-  }
 
-  await logActivity(req.user.userId, actionType, 'task', req.params.id, finalTitle, detailsText);
+    await logActivity(req.user.userId, actionType, 'task', req.params.id, finalTitle, detailsText);
+  }
   
   res.json({ message: 'Task updated' });
 });

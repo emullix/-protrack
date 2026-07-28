@@ -93,7 +93,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
     }
   }
 
-  let detailsText = `Actualizó el proyecto "${newTitle}"`;
   if (oldStatus !== newStatus) {
     const statusMap = {
       'Active': 'Activo',
@@ -104,10 +103,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
     };
     const oldStatusSp = statusMap[oldStatus] || oldStatus;
     const newStatusSp = statusMap[newStatus] || newStatus;
-    detailsText = `Cambió el estado del proyecto "${newTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
+    const detailsText = `Cambió el estado del proyecto "${newTitle}" de "${oldStatusSp}" a "${newStatusSp}"`;
+    
+    await logActivity(req.user.userId, 'update_status', 'project', req.params.id, newTitle, detailsText);
   }
-  
-  await logActivity(req.user.userId, 'update', 'project', req.params.id, newTitle, detailsText);
   
   res.json({ message: 'Project updated' });
 });

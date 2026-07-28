@@ -160,6 +160,9 @@ const initializeDb = async () => {
   // Migrate 'pending' status tasks to 'To Do'
   await db.run("UPDATE tasks SET status = 'To Do' WHERE status = 'pending'");
   
+  // Clean up old generic update activity logs to keep the feed clean
+  await db.run("DELETE FROM activity_logs WHERE action = 'update'");
+  
   return db;
 };
 
