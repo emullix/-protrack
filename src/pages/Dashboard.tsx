@@ -25,9 +25,10 @@ interface DashboardProps {
   onProjectClick?: (projectId: string) => void;
   onTaskClick?: (taskId: string, projectId: string) => void;
   onStatClick?: (status: string) => void;
+  onViewAllActivities?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activities, team, currentUser, setActiveTab, onProjectClick, onTaskClick, onStatClick }) => {
+const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activities, team, currentUser, setActiveTab, onProjectClick, onTaskClick, onStatClick, onViewAllActivities }) => {
   const stats = [
     { label: 'Total Projects', value: projects.length.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+2 this month' },
     { label: 'Active', value: projects.filter(p => p.status === 'Active').length.toString(), icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50', trend: 'Starting up' },
@@ -87,7 +88,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-slate-800">Actividad Reciente</h3>
           <button 
-            onClick={() => setActiveTab('meetings')}
+            onClick={onViewAllActivities || (() => setActiveTab('meetings'))}
             className="text-brand-600 text-sm font-medium hover:underline"
           >
             Ver Todo

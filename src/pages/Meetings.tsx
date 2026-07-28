@@ -34,6 +34,8 @@ interface MeetingsProps {
   onQuickProject?: (name: string) => Promise<string>;
   onQuickTask?: (name: string, projectId: string) => Promise<void>;
   activities: any[];
+  activeSubTab?: 'meetings' | 'log';
+  setActiveSubTab?: (subTab: 'meetings' | 'log') => void;
 }
 
 const Meetings: React.FC<MeetingsProps> = ({ 
@@ -51,9 +53,13 @@ const Meetings: React.FC<MeetingsProps> = ({
   onUpdateMeeting,
   onDelete,
   onQuickProject,
-  onQuickTask
+  onQuickTask,
+  activeSubTab,
+  setActiveSubTab
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'meetings' | 'log'>('meetings');
+  const [localActiveSubTab, setLocalActiveSubTab] = useState<'meetings' | 'log'>('meetings');
+  const subTab = activeSubTab !== undefined ? activeSubTab : localActiveSubTab;
+  const setSubTab = setActiveSubTab !== undefined ? setActiveSubTab : setLocalActiveSubTab;
   const [logSearch, setLogSearch] = useState('');
   const [logFilter, setLogFilter] = useState<'all' | 'project' | 'task'>('all');
 
@@ -313,20 +319,20 @@ const Meetings: React.FC<MeetingsProps> = ({
       {/* Selector de Pestañas */}
       <div className="flex border-b border-slate-200 mb-6">
         <button
-          onClick={() => setActiveSubTab('meetings')}
-          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${activeSubTab === 'meetings' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          onClick={() => setSubTab('meetings')}
+          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${subTab === 'meetings' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
         >
           Sesiones de Sincronización
         </button>
         <button
-          onClick={() => setActiveSubTab('log')}
-          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${activeSubTab === 'log' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          onClick={() => setSubTab('log')}
+          className={`pb-3 px-4 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${subTab === 'log' ? 'border-brand-500 text-brand-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
         >
           Bitácora de Actividades
         </button>
       </div>
 
-      {activeSubTab === 'log' ? (
+      {subTab === 'log' ? (
         <div className="space-y-6">
           {/* Filtros para la Bitácora */}
           <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
@@ -455,7 +461,7 @@ const Meetings: React.FC<MeetingsProps> = ({
                             <button 
                               onClick={() => {
                                 onFilter?.({ projectId: activity.entity_id.toString() });
-                                setActiveSubTab('meetings');
+                                setSubTab('meetings');
                               }}
                               className="text-xs font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition-all"
                             >
@@ -466,7 +472,7 @@ const Meetings: React.FC<MeetingsProps> = ({
                             <button 
                               onClick={() => {
                                 onFilter?.({ taskId: activity.entity_id.toString() });
-                                setActiveSubTab('meetings');
+                                setSubTab('meetings');
                               }}
                               className="text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-all"
                             >

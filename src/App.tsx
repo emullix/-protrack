@@ -29,7 +29,14 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, rawSetActiveTab] = useState('dashboard');
+  const [meetingsSubTab, setMeetingsSubTab] = useState<'meetings' | 'log'>('meetings');
+  const setActiveTab = (tab: string) => {
+    rawSetActiveTab(tab);
+    if (tab !== 'meetings') {
+      setMeetingsSubTab('meetings');
+    }
+  };
   const [meetingFilter, setMeetingFilter] = useState<{ projectId?: string; taskId?: string } | null>(null);
   const [taskFilter, setTaskFilter] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -761,6 +768,10 @@ const App: React.FC = () => {
               setProjectFilters(prev => ({ ...prev, status: status as ProjectStatus | 'All' }));
               setActiveTab('projects');
             }}
+            onViewAllActivities={() => {
+              setMeetingsSubTab('log');
+              setActiveTab('meetings');
+            }}
           />
         );
       case 'projects':
@@ -842,6 +853,8 @@ const App: React.FC = () => {
             onDelete={handleDeleteMeeting}
             onQuickProject={handleQuickProject}
             onQuickTask={handleQuickTask}
+            activeSubTab={meetingsSubTab}
+            setActiveSubTab={setMeetingsSubTab}
           />
         );
       case 'team':
