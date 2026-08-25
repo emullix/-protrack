@@ -13,7 +13,12 @@ import {
   Trash2,
   Edit2,
   ShieldCheck,
-  Check
+  Check,
+  Database,
+  Download,
+  Upload,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 
 import { User as UserType, Role } from '../types';
@@ -43,6 +48,69 @@ const Settings: React.FC<SettingsProps> = ({
   const [passError, setPassError] = React.useState('');
   const [passSuccess, setPassSuccess] = React.useState('');
   const [passLoading, setPassLoading] = React.useState(false);
+
+  // Backup & Restore state
+  const [backupLoading, setBackupLoading] = React.useState(false);
+  const [restoreLoading, setRestoreLoading] = React.useState(false);
+  const [backupError, setBackupError] = React.useState('');
+  const [backupSuccess, setBackupSuccess] = React.useState('');
+  const [restoreError, setRestoreError] = React.useState('');
+  const [restoreSuccess, setRestoreSuccess] = React.useState('');
+  const [showRestoreConfirm, setShowRestoreConfirm] = React.useState(false);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleDownloadBackup = async () => {
+    setBackupLoading(true);
+    setBackupError('');
+    setBackupSuccess('');
+    try {
+      const blob = await api.backup.download();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `protrack_backup_${new Date().toISOString().split('T')[0]}.db`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      setBackupSuccess('Database exported successfully!');
+    } catch (err: any) {
+      setBackupError(err.message || 'Failed to download backup');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      setRestoreError('');
+      setRestoreSuccess('');
+      setShowRestoreConfirm(true);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!selectedFile) return;
+    setRestoreLoading(true);
+    setRestoreError('');
+    setRestoreSuccess('');
+    setShowRestoreConfirm(false);
+    try {
+      const response = await api.backup.restore(selectedFile);
+      setRestoreSuccess(response.message || 'Database restored successfully! Restarting session...');
+      setSelectedFile(null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500);
+    } catch (err: any) {
+      setRestoreError(err.message || 'Failed to restore database');
+      setSelectedFile(null);
+    } finally {
+      setRestoreLoading(false);
+    }
+  };
 
   const handlePasswordChange = async () => {
     setPassError('');
@@ -85,6 +153,7 @@ const Settings: React.FC<SettingsProps> = ({
     { id: 'privacy', label: 'Privacy Settings', icon: Shield, description: 'Control who can see your activity and profile.' },
     { id: 'billing', label: 'Billing & Subscription', icon: CreditCard, description: 'Manage your plan, payment methods, and invoices.' },
     { id: 'language', label: 'Language & Region', icon: Globe, description: 'Set your preferred language and time zone.' },
+    { id: 'backup', label: 'Backup & Restore', icon: Database, description: 'Back up your workspace data or restore from a backup file.' },
   ];
 
   const [isAddingRole, setIsAddingRole] = React.useState(false);
@@ -374,7 +443,167 @@ const Settings: React.FC<SettingsProps> = ({
     );
   }
 
-  if (activeSection && activeSection !== 'security') {
+  if (activeSection === 'backup') {
+    return (
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setActiveSection(null)}
+            className="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-500"
+          >
+            <ChevronRight size={24} className="rotate-180" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">Backup & Restore</h2>
+            <p className="text-slate-500">Securely export your workspace data or restore from a previous backup file.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Export Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center">
+                <Download size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Export Database</h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Download a complete backup copy of your SQLite database file. This contains all projects, tasks, team members, roles, and history.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-8 space-y-3">
+              {backupSuccess && (
+                <div className="p-3 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg">
+                  {backupSuccess}
+                </div>
+              )}
+              {backupError && (
+                <div className="p-3 bg-red-50 text-red-600 text-xs font-semibold rounded-lg">
+                  {backupError}
+                </div>
+              )}
+              <button
+                onClick={handleDownloadBackup}
+                disabled={backupLoading}
+                className="w-full bg-brand-600 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-200 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {backupLoading ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={18} />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download size={18} />
+                    Export Database (.db)
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Import/Restore Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                <Upload size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Restore Database</h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Upload a previously exported database file to overwrite the current state. 
+                </p>
+              </div>
+              <div className="flex items-start gap-2 bg-amber-50/50 border border-amber-100 p-3 rounded-xl">
+                <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={16} />
+                <p className="text-xs text-amber-700 leading-normal">
+                  <strong>Warning:</strong> This will permanently overwrite all active data and restart your current session.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-3">
+              {restoreSuccess && (
+                <div className="p-3 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg flex items-center gap-2">
+                  <RefreshCw className="animate-spin text-emerald-600 shrink-0" size={16} />
+                  <span>{restoreSuccess}</span>
+                </div>
+              )}
+              {restoreError && (
+                <div className="p-3 bg-red-50 text-red-600 text-xs font-semibold rounded-lg">
+                  {restoreError}
+                </div>
+              )}
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".db"
+                className="hidden"
+              />
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={restoreLoading}
+                className="w-full bg-slate-800 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {restoreLoading ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={18} />
+                    Restoring...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    Upload & Restore File
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirmation Modal */}
+        {showRestoreConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-6 animate-in fade-in zoom-in duration-200">
+              <div className="flex items-center gap-3 text-amber-600">
+                <AlertTriangle size={32} />
+                <h3 className="text-xl font-bold text-slate-800">Confirm Restore?</h3>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                You are about to restore the database using <strong className="text-slate-800">{selectedFile?.name}</strong>.
+                This operation cannot be undone and will overwrite all existing projects, tasks, settings, and other configurations.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setShowRestoreConfirm(false);
+                  }}
+                  className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRestoreBackup}
+                  className="px-5 py-2 text-sm font-bold bg-amber-600 text-white hover:bg-amber-700 rounded-lg shadow-md shadow-amber-100 transition-all"
+                >
+                  Overwrite and Restore
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (activeSection && activeSection !== 'security' && activeSection !== 'roles' && activeSection !== 'backup') {
     return (
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="flex items-center gap-4">

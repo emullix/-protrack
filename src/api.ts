@@ -295,6 +295,28 @@ const api = {
       });
       return handleResponse(resp);
     }
+  },
+  backup: {
+    download: async () => {
+      const resp = await fetch(`${API_BASE_URL}/backup`, {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      });
+      if (!resp.ok) {
+        throw new Error('Failed to download backup');
+      }
+      return resp.blob();
+    },
+    restore: async (file: File) => {
+      const resp = await fetch(`${API_BASE_URL}/backup/restore`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: file
+      });
+      return handleResponse(resp);
+    }
   }
 };
 
