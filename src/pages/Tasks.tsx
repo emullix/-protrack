@@ -174,6 +174,7 @@ const Tasks: React.FC<TasksProps> = ({
   const [filterProject, setFilterProject] = useState<string>(initialProjectFilter || 'All');
   const [filterPriority, setFilterPriority] = useState<Priority | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [onlyNextTask, setOnlyNextTask] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -187,11 +188,29 @@ const Tasks: React.FC<TasksProps> = ({
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterProject, filterPriority, searchQuery]);
+  }, [filterStatus, filterProject, filterPriority, searchQuery, onlyNextTask]);
+
+  // Find the next task for each project (first task that is not Completed)
+  const nextTaskByProject: Record<string, string> = {};
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.position !== b.position) return a.position - b.position;
+    return new Date(a.updatedAt || 0).getTime() - new Date(b.updatedAt || 0).getTime();
+  });
+
+  projects.forEach(proj => {
+    const projTasks = sortedTasks.filter(t => t.projectId === proj.id && t.status !== 'Completed');
+    if (projTasks.length > 0) {
+      nextTaskByProject[proj.id] = projTasks[0].id;
+    }
+  });
 
   const filteredTasks = tasks.filter(task => {
     const project = projects.find(p => p.id?.toString() === task.projectId?.toString());
     if (project?.status === 'On Hold') return false;
+
+    if (onlyNextTask && nextTaskByProject[task.projectId] !== task.id) {
+      return false;
+    }
 
     const statusMatch = filterStatus === 'All' || task.status === filterStatus;
     const projectMatch = filterProject === 'All' || task.projectId === filterProject;
@@ -307,6 +326,17 @@ const Tasks: React.FC<TasksProps> = ({
             </select>
             <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
+
+          <label className="relative inline-flex items-center cursor-pointer sm:ml-auto">
+            <input 
+              type="checkbox" 
+              className="sr-only peer" 
+              checked={onlyNextTask}
+              onChange={() => setOnlyNextTask(!onlyNextTask)}
+            />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+            <span className="ml-2 text-xs font-medium text-slate-500 whitespace-nowrap">Siguiente tarea</span>
+          </label>
         </div>
       </div>
 
