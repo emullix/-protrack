@@ -16,11 +16,12 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onTabDoubleClick?: (tab: string) => void;
   onLogout: () => void;
   currentUser: User | null;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLogout, currentUser }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onTabDoubleClick, onLogout, currentUser }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Briefcase },
@@ -32,7 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} currentUser={currentUser} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onTabDoubleClick={onTabDoubleClick} onLogout={onLogout} currentUser={currentUser} />
       
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Top Header */}
@@ -77,6 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onLo
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
+                onDoubleClick={() => onTabDoubleClick?.(item.id)}
                 className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${isActive ? "text-brand-600 font-semibold" : "text-slate-400 hover:text-slate-600"}`}
               >
                 <Icon size={20} className={isActive ? "text-brand-600" : "text-slate-400"} />

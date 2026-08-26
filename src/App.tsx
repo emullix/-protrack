@@ -52,6 +52,7 @@ const App: React.FC = () => {
   };
   const [meetingFilter, setMeetingFilter] = useState<{ projectId?: string; taskId?: string } | null>(null);
   const [taskFilter, setTaskFilter] = useState<string | null>(null);
+  const [tasksKey, setTasksKey] = useState(0);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<User[]>([]);
@@ -327,6 +328,13 @@ const App: React.FC = () => {
       setNewTask(prev => ({ ...prev, projectId: taskFilter }));
     }
   }, [activeTab, taskFilter]);
+
+  const handleTabDoubleClick = (tab: string) => {
+    if (tab === 'tasks') {
+      setTaskFilter(null);
+      setTasksKey(prev => prev + 1);
+    }
+  };
 
   const handleLogin = (userData: any) => {
     const email = userData.username;
@@ -809,6 +817,7 @@ const App: React.FC = () => {
       case 'tasks':
         return (
           <Tasks 
+            key={tasksKey}
             tasks={tasks} 
             meetings={meetings} 
             setActiveTab={setActiveTab} 
@@ -1403,7 +1412,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} currentUser={currentUser}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} onTabDoubleClick={handleTabDoubleClick} onLogout={handleLogout} currentUser={currentUser}>
       {renderContent()}
     </Layout>
   );
