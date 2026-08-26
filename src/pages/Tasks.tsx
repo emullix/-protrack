@@ -186,6 +186,14 @@ const Tasks: React.FC<TasksProps> = ({
     }
   }, [initialProjectFilter]);
 
+  // When a project is selected, remove all task status filters
+  React.useEffect(() => {
+    if (filterProject !== 'All') {
+      setFilterStatus('All');
+      setOnlyNextTask(false);
+    }
+  }, [filterProject]);
+
   React.useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus, filterProject, filterPriority, searchQuery, onlyNextTask]);
