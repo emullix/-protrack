@@ -55,7 +55,7 @@ router.post('/', authMiddleware, async (req, res) => {
   // Recalculate project status based on task updates/inactivity
   await updateProjectStatus(db, project_id, req.user.userId);
   
-  res.status(201).json({ id: taskId, project_id, title, description, due_date, assignee_id, priority: priority || 'Medium' });
+  res.status(201).json({ id: taskId, project_id, title, description, due_date, assignee_id, priority: priority || 'Medium', position });
 });
 
 // PUT /tasks/:id

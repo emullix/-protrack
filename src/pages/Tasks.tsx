@@ -226,6 +226,10 @@ const Tasks: React.FC<TasksProps> = ({
     const searchMatch = task.name.toLowerCase().includes(searchQuery.toLowerCase());
     return statusMatch && projectMatch && priorityMatch && searchMatch;
   }).sort((a, b) => {
+    // Completed tasks first (at the top)
+    if (a.status === 'Completed' && b.status !== 'Completed') return -1;
+    if (a.status !== 'Completed' && b.status === 'Completed') return 1;
+
     const nameA = a.projectName || '';
     const nameB = b.projectName || '';
     const projectCompare = nameA.localeCompare(nameB);
