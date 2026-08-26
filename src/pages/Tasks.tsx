@@ -183,9 +183,7 @@ const Tasks: React.FC<TasksProps> = ({
 
   // Sync internal filter state with prop if it changes
   React.useEffect(() => {
-    if (initialProjectFilter) {
-      setFilterProject(initialProjectFilter);
-    }
+    setFilterProject(initialProjectFilter || 'All');
   }, [initialProjectFilter]);
 
   // When a project is selected, remove all task status filters
@@ -405,7 +403,10 @@ const Tasks: React.FC<TasksProps> = ({
                   getStatusIcon={getStatusIcon}
                   getPriorityColor={getPriorityColor}
                   isDraggable={filterProject !== 'All'}
-                  onProjectClick={(projectId) => setFilterProject(projectId)}
+                  onProjectClick={(projectId) => {
+                    setFilterProject(projectId);
+                    onProjectFilterChange?.(projectId);
+                  }}
                 />
               ))}
             </Reorder.Group>
