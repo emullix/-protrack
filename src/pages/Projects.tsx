@@ -106,7 +106,7 @@ const Projects: React.FC<ProjectsProps> = ({
     const statusMatch = filterStatus === 'All' 
       ? (showCompleted 
           ? true 
-          : (p.status === 'In Progress' || p.status === 'Active')
+          : (p.status === 'In Progress' || p.status === 'Active' || p.status === 'At Risk')
         )
       : p.status === filterStatus;
     const priorityMatch = filterPriority === 'All' || p.priority === filterPriority;

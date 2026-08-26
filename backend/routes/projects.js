@@ -2,12 +2,20 @@ import express from 'express';
 import { dbPromise } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { logActivity } from '../utils/activityLogger.js';
+import { updateProjectStatus } from '../utils/projectStatusUpdater.js';
 
 const router = express.Router();
 
 // GET /projects
 router.get('/', authMiddleware, async (req, res) => {
   const db = await dbPromise;
+  
+  // Recalculate status for all user's projects before returning
+  const initialProjects = await db.all('SELECT id FROM projects WHERE user_id = ?', [req.user.userId]);
+  for (const p of initialProjects) {
+    await updateProjectStatus(db, p.id, req.user.userId);
+  }
+  
   const projects = await db.all('SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC', [req.user.userId]);
   
   // Fetch team members for each project
@@ -31,8 +39,8 @@ router.post('/', authMiddleware, async (req, res) => {
   if (!name) return res.status(400).json({ message: 'Name (title) is required' });
 
   const result = await db.run(
-    'INSERT INTO projects (user_id, title, description, deadline, priority, tags) VALUES (?, ?, ?, ?, ?, ?)', 
-    [req.user.userId, name, description, deadline, priority || 'Medium', Array.isArray(tags) ? tags.join(',') : tags]
+    'INSERT INTO projects (user_id, title, description, status, deadline, priority, tags) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+    [req.user.userId, name, description, 'Active', deadline, priority || 'Medium', Array.isArray(tags) ? tags.join(',') : tags]
   );
   
   const projectId = result.lastID;

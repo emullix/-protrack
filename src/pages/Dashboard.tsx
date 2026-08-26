@@ -8,7 +8,8 @@ import {
   ArrowUpRight,
   MoreVertical,
   ChevronRight,
-  Users
+  Users,
+  Pause
 } from 'lucide-react';
 import { Project, Meeting, Task, User } from '../types';
 import { PROJECTS as ALL_PROJECTS } from '../constants';
@@ -30,10 +31,12 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activities, team, currentUser, setActiveTab, onProjectClick, onTaskClick, onStatClick, onViewAllActivities }) => {
   const stats = [
-    { label: 'Total Projects', value: projects.length.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+2 this month' },
-    { label: 'Active', value: projects.filter(p => p.status === 'Active').length.toString(), icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50', trend: 'Starting up' },
-    { label: 'In Progress', value: projects.filter(p => p.status === 'In Progress').length.toString(), icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'On track' },
-    { label: 'Completed', value: projects.filter(p => p.status === 'Completed').length.toString(), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+5 this week' },
+    { label: 'Total Projects', value: projects.length.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'Total general' },
+    { label: 'Active', value: projects.filter(p => p.status === 'Active').length.toString(), icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50', trend: 'Nuevos/sin tareas' },
+    { label: 'In Progress', value: projects.filter(p => p.status === 'In Progress').length.toString(), icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'En desarrollo' },
+    { label: 'At Risk', value: projects.filter(p => p.status === 'At Risk').length.toString(), icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50', trend: 'Inactivo > 3 días' },
+    { label: 'On Hold', value: projects.filter(p => p.status === 'On Hold').length.toString(), icon: Pause, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Inactivo > 15 días' },
+    { label: 'Completed', value: projects.filter(p => p.status === 'Completed').length.toString(), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: 'Completados' },
   ];
 
   return (
@@ -43,7 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
         <p className="text-slate-500">Welcome back, Alex. Here's what's happening today.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {stats.map((stat, index) => (
           <div 
             key={index} 
@@ -53,7 +56,9 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
                   'Total Projects': 'All',
                   'Active': 'Active',
                   'In Progress': 'In Progress',
-                  'Completed': 'Completed'
+                  'Completed': 'Completed',
+                  'At Risk': 'At Risk',
+                  'On Hold': 'On Hold'
                 };
                 onStatClick(statusMap[stat.label] || 'All');
               } else {
@@ -184,99 +189,6 @@ const Dashboard: React.FC<DashboardProps> = ({ projects, tasks, meetings, activi
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-800">Active Projects</h3>
-          <button 
-            onClick={() => setActiveTab('projects')}
-            className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-sm font-medium"
-          >
-            See all projects <ChevronRight size={16} />
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project Name</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Team</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</th>
-                <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Deadline</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {projects.slice(0, 3).map((project) => (
-                <tr 
-                  key={project.id} 
-                  onClick={() => onProjectClick ? onProjectClick(project.id) : setActiveTab('projects')}
-                  className="hover:bg-slate-50/50 transition-all cursor-pointer"
-                >
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-semibold text-slate-800">{project.name}</p>
-                    <p className="text-xs text-slate-500 truncate max-w-[200px]">{project.description}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center text-xs font-medium ${
-                      project.status === 'Active' ? 'text-brand-600' :
-                      project.status === 'In Progress' ? 'text-blue-600' :
-                      project.status === 'Completed' ? 'text-emerald-600' :
-                      project.status === 'At Risk' ? 'text-rose-600' :
-                      'text-slate-600'
-                    }`}>
-                      {project.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex -space-x-2">
-                      {project.team.slice(0, 3).map((member) => (
-                        <div key={member.id} className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm ${getAvatarColor(member.name)}`}>
-                          {getInitials(member.name)}
-                        </div>
-                      ))}
-                      {project.team.length > 3 && (
-                        <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                          +{project.team.length - 3}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {(() => {
-                      const projectTasks = tasks.filter(t => t.projectId === project.id)
-                                                .sort((a, b) => a.position - b.position);
-                      const nextTask = projectTasks.find(t => t.status !== 'Completed');
-                      return (
-                        <div className="w-full max-w-[120px] flex flex-col gap-1">
-                          {nextTask && (
-                            <span className="text-[10px] text-slate-500 truncate max-w-[110px] font-medium" title={nextTask.name}>
-                              {nextTask.name}
-                            </span>
-                          )}
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-xs font-medium text-slate-600">{project.progress}%</span>
-                          </div>
-                          <div className="w-full bg-slate-100 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${
-                                project.status === 'At Risk' ? 'bg-rose-500' : 'bg-brand-500'
-                              }`} 
-                              style={{ width: `${project.progress}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                    {formatDate(project.deadline)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 };

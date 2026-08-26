@@ -2,6 +2,7 @@ import express from 'express';
 import { dbPromise } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { logActivity } from '../utils/activityLogger.js';
+import { updateProjectStatus } from '../utils/projectStatusUpdater.js';
 
 const router = express.Router();
 
@@ -51,11 +52,8 @@ router.post('/', authMiddleware, async (req, res) => {
   const taskId = result.lastID;
   await logActivity(req.user.userId, 'create', 'task', taskId, title, `Creado la tarea "${title}"`);
   
-  // If the project was previously completed, revert it to 'In Progress'
-  if (project.status === 'Completed') {
-    await db.run('UPDATE projects SET status = "In Progress" WHERE id = ?', [project_id]);
-    await logActivity(req.user.userId, 'update_status', 'project', project_id, project.title, `Cambió el estado del proyecto "${project.title}" de "Completado" a "En progreso"`);
-  }
+  // Recalculate project status based on task updates/inactivity
+  await updateProjectStatus(db, project_id, req.user.userId);
   
   res.status(201).json({ id: taskId, project_id, title, description, due_date, assignee_id, priority: priority || 'Medium' });
 });
@@ -116,25 +114,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await logActivity(req.user.userId, actionType, 'task', req.params.id, finalTitle, detailsText);
   }
 
-  // Check project status based on task completion
-  const projectId = task.project_id;
-  const allTasks = await db.all('SELECT status FROM tasks WHERE project_id = ?', [projectId]);
-  const totalTasks = allTasks.length;
-  const completedTasks = allTasks.filter(t => normalizeStatus(t.status) === 'Completed').length;
-  
-  if (totalTasks > 0 && completedTasks === totalTasks) {
-    const projectObj = await db.get('SELECT title, status FROM projects WHERE id = ?', [projectId]);
-    if (projectObj && projectObj.status !== 'Completed') {
-      await db.run('UPDATE projects SET status = "Completed" WHERE id = ?', [projectId]);
-      await logActivity(req.user.userId, 'complete', 'project', projectId, projectObj.title, `Completó el proyecto "${projectObj.title}"`);
-    }
-  } else {
-    const projectObj = await db.get('SELECT title, status FROM projects WHERE id = ?', [projectId]);
-    if (projectObj && projectObj.status === 'Completed') {
-      await db.run('UPDATE projects SET status = "In Progress" WHERE id = ?', [projectId]);
-      await logActivity(req.user.userId, 'update_status', 'project', projectId, projectObj.title, `Cambió el estado del proyecto "${projectObj.title}" de "Completado" a "En progreso"`);
-    }
-  }
+  // Recalculate project status based on task updates/inactivity
+  await updateProjectStatus(db, task.project_id, req.user.userId);
   
   res.json({ message: 'Task updated' });
 });
@@ -155,19 +136,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   
   await logActivity(req.user.userId, 'delete', 'task', req.params.id, task.title, `Eliminó la tarea "${task.title}"`);
 
-  // Check project status based on task completion after deletion
-  const projectId = task.project_id;
-  const allTasks = await db.all('SELECT status FROM tasks WHERE project_id = ?', [projectId]);
-  const totalTasks = allTasks.length;
-  const completedTasks = allTasks.filter(t => normalizeStatus(t.status) === 'Completed').length;
-  
-  if (totalTasks > 0 && completedTasks === totalTasks) {
-    const projectObj = await db.get('SELECT title, status FROM projects WHERE id = ?', [projectId]);
-    if (projectObj && projectObj.status !== 'Completed') {
-      await db.run('UPDATE projects SET status = "Completed" WHERE id = ?', [projectId]);
-      await logActivity(req.user.userId, 'complete', 'project', projectId, projectObj.title, `Completó el proyecto "${projectObj.title}"`);
-    }
-  }
+  // Recalculate project status based on task updates/inactivity
+  await updateProjectStatus(db, task.project_id, req.user.userId);
   
   res.json({ message: 'Task deleted' });
 });

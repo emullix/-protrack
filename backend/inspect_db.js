@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = path.join(__dirname, 'protrack.db');
-const db = new sqlite3.default.Database(dbPath);
+const db = new sqlite3.Database(dbPath);
 
 console.log('--- PROJECTS ---');
 db.all('SELECT * FROM projects', [], (err, rows) => {

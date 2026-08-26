@@ -141,32 +141,33 @@ const App: React.FC = () => {
       const completed = projectTasks.filter(t => t.status === 'Completed').length;
       const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
       
-      // Automatic Status Logic
-      let autoStatus: ProjectStatus = 'Active';
-      
       const lastUpdate = projectTasks.length > 0 
         ? Math.max(...projectTasks.map(t => new Date(t.updatedAt).getTime()))
-        : new Date(project.deadline || Date.now()).getTime(); // Fallback to deadline if no tasks
+        : new Date(project.createdAt || Date.now()).getTime();
       
       const daysSinceUpdate = Math.floor((Date.now() - lastUpdate) / (1000 * 60 * 60 * 24));
 
-      if (total === 0) {
-        autoStatus = 'Active';
-      } else if (completed === total) {
-        autoStatus = 'Completed';
-      } else if (daysSinceUpdate > 3) {
-        autoStatus = 'At Risk';
-      } else if (daysSinceUpdate === 3) {
-        autoStatus = 'On Hold';
-      } else if (completed >= 1) {
-        autoStatus = 'In Progress';
+      let displayStatus = project.status || 'Active';
+
+      if (total > 0 && completed === total) {
+        displayStatus = 'Completed';
       } else {
-        autoStatus = 'Active';
+        if (daysSinceUpdate > 15) {
+          displayStatus = 'On Hold';
+        } else if (daysSinceUpdate > 3) {
+          displayStatus = 'At Risk';
+        } else {
+          if (completed >= 1) {
+            displayStatus = 'In Progress';
+          } else {
+            displayStatus = 'Active';
+          }
+        }
       }
 
       return {
         ...project,
-        status: (total > 0 && completed === total) ? 'Completed' : (project.status || autoStatus),
+        status: displayStatus,
         tasksCount: total,
         completedTasksCount: completed,
         progress

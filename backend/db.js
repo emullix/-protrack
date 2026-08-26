@@ -27,7 +27,7 @@ const initializeDb = async () => {
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       description TEXT,
-      status TEXT DEFAULT 'In Progress',
+      status TEXT DEFAULT 'Active',
       priority TEXT DEFAULT 'Medium',
       deadline TEXT,
       tags TEXT,
