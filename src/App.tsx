@@ -805,6 +805,7 @@ const App: React.FC = () => {
             onShowMeetings={(taskId) => { setMeetingFilter({ taskId }); setActiveTab('meetings'); }} 
             initialProjectFilter={taskFilter} 
             onClearFilter={() => setTaskFilter(null)} 
+            onProjectFilterChange={(projectId) => setTaskFilter(projectId === 'All' ? null : projectId)}
             projects={projectsWithStats} 
             onReorder={(newIds) => {
               const taskById = new Map(tasks.map(t => [t.id, t]));

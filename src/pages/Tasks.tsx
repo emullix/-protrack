@@ -31,6 +31,7 @@ interface TasksProps {
   onShowMeetings: (taskId: string) => void;
   initialProjectFilter?: string | null;
   onClearFilter?: () => void;
+  onProjectFilterChange?: (projectId: string) => void;
   projects: Project[];
   onReorder?: (newOrderIds: string[]) => void;
 }
@@ -167,6 +168,7 @@ const Tasks: React.FC<TasksProps> = ({
   onShowMeetings,
   initialProjectFilter,
   onClearFilter,
+  onProjectFilterChange,
   projects,
   onReorder
 }) => {
@@ -314,7 +316,11 @@ const Tasks: React.FC<TasksProps> = ({
           <div className="relative group">
             <select 
               value={filterProject}
-              onChange={(e) => setFilterProject(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFilterProject(val);
+                onProjectFilterChange?.(val);
+              }}
               className="appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
             >
               <option value="All">All Projects</option>
