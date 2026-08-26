@@ -24,6 +24,19 @@ import {
 } from './types';
 import api from './api';
 
+const capitalizeSentences = (text: string): string => {
+  if (!text) return '';
+  // Capitalize first letter of the text
+  let capitalized = text.charAt(0).toUpperCase() + text.slice(1);
+  
+  // Capitalize after periods, question marks, and exclamation marks followed by space
+  capitalized = capitalized.replace(/(\.|\?|!)\s+([a-z])/g, (match, p1, p2) => {
+    return p1 + ' ' + p2.toUpperCase();
+  });
+  
+  return capitalized;
+};
+
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -1000,7 +1013,14 @@ const App: React.FC = () => {
                 <input 
                   type="text" 
                   value={newProject.name}
-                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                  onChange={(e) => {
+                    const nameVal = capitalizeSentences(e.target.value);
+                    setNewProject({
+                      ...newProject, 
+                      name: nameVal,
+                      description: nameVal
+                    });
+                  }}
                   placeholder="e.g. Website Redesign" 
                   className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium" 
                 />
@@ -1009,7 +1029,7 @@ const App: React.FC = () => {
                 <label className="text-sm font-bold text-slate-700">Description</label>
                 <textarea 
                   value={newProject.description}
-                  onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                  onChange={(e) => setNewProject({...newProject, description: capitalizeSentences(e.target.value)})}
                   placeholder="Briefly describe the project goals..." 
                   className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all h-32 resize-none font-medium"
                 ></textarea>
@@ -1102,7 +1122,7 @@ const App: React.FC = () => {
                 <input 
                   type="text" 
                   value={editingProject.name}
-                  onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
+                  onChange={(e) => setEditingProject({...editingProject, name: capitalizeSentences(e.target.value)})}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                 />
               </div>
@@ -1110,7 +1130,7 @@ const App: React.FC = () => {
                 <label className="text-sm font-bold text-slate-700">Description</label>
                 <textarea 
                   value={editingProject.description}
-                  onChange={(e) => setEditingProject({...editingProject, description: e.target.value})}
+                  onChange={(e) => setEditingProject({...editingProject, description: capitalizeSentences(e.target.value)})}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 h-32"
                 ></textarea>
               </div>
@@ -1210,7 +1230,7 @@ const App: React.FC = () => {
                 <input 
                   type="text" 
                   value={editingTask.name}
-                  onChange={(e) => setEditingTask({...editingTask, name: e.target.value})}
+                  onChange={(e) => setEditingTask({...editingTask, name: capitalizeSentences(e.target.value)})}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                 />
               </div>
@@ -1301,7 +1321,7 @@ const App: React.FC = () => {
                 <input 
                   type="text" 
                   value={newTask.name}
-                  onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+                  onChange={(e) => setNewTask({...newTask, name: capitalizeSentences(e.target.value)})}
                   placeholder="e.g. Design Login Screen" 
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20" 
                 />
